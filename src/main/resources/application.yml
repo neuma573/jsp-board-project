@@ -1,0 +1,68 @@
+server:
+  port: 8080
+  # JSP수정시 서버 재시작없이 바로 적용될 수 있도록 설정
+  servlet.jsp.init-parameters:
+   development: true
+
+spring:
+  application.name: jsp-project-sample
+  profiles.active: local
+  mvc:
+    view:
+      prefix: /WEB-INF/view/
+      suffix: .jsp
+    static-path-pattern: /static/**
+    # 클라이언트가 특정 포맷으로 요청하면 LocalDateTime 타입에 자동으로 적용되도록 설정
+    format.date-time: yyyyMMddHHmmss
+  servlet.multipart:
+    max-file-size: 128KB
+
+
+mybatis:
+  config-location: classpath:/sql-map-config.xml
+  mapper-locations: classpath*:/mybatis/mysql/**/*-mapper.xml
+
+---
+spring:
+  config.activate.on-profile: local
+  datasource:
+    # log4jdbc - boot 어플 단독으로는 동작하지만 tomcat에 올리면 동작 안하는 경우 있음
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:mariadb://localhost:3306/sample?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: root
+    hikari:
+      pool-name: hikari-cp
+      maximum-pool-size: 5
+      minimum-idle: 5
+#logging.level:
+#  root: info
+#  "[com.lguplus.medialog]": debug
+
+---
+spring:
+  config.activate.on-profile: dev
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/sample?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: root
+    hikari:
+      pool-name: hikari-cp
+      maximum-pool-size: 5
+      minimum-idle: 5
+      max-lifetime: 30 # Database의 wait_timeout 보다 2, 3초 정도 짧게 주면 된다
+
+---
+app.settings:
+  xss-excludes:
+    - /api/download # xss filter 제외 uri를 list 형식으로 추가
+  log:
+    svc-root: /svc/logs/${spring.application.name}/svc
+    tlo-root: /svc/logs/${spring.application.name}/tlo 
+#   svc-root: /svc/logs/${spring.application.name}/svc #
+#   tlo-root: /svc/logs/${spring.application.name}/tlo #
+    tlo-mdc-key: tloMdcKey
+    tlo-prefix: ${spring.application.name}
+  sms-authnum-msg: "[인증번호:%s] 사용자본인 인증번호를 입력해주세요"
+  sms-callback: 15445992

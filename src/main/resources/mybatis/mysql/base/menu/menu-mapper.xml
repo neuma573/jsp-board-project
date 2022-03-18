@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lguplus.medialog.project.base.menu.MenuDao">
+
+	<select id="getMenuByRole" parameterType="string" resultType="Menu">
+		/* menu-mapper.xml(getMenuByRole) */
+		SELECT *
+		FROM (
+			SELECT 
+				M.MENU_ID
+				, MENU_CD
+				, MENU_NM
+				, LVL
+				, ORD
+				, URL
+				, UPPER_MENU_ID
+				, IF(R.MENU_ID IS NULL, 'N', 'Y') AS ALLOW_YN
+			FROM
+				MENU M
+				<!-- 권한이 없는 메뉴도 노출하되 ALLOW_YN 값으로 접근을 막는 경우 -->
+<!-- 				LEFT OUTER JOIN ROLE_MENU_MAP R ON M.MENU_ID = R.MENU_ID AND ROLE_ID = #{roleId} -->
+				<!-- 메뉴 노출을 안하는 경우 -->
+				INNER JOIN ROLE_MENU_MAP R ON M.MENU_ID = R.MENU_ID AND ROLE_ID = #{roleId}
+			WHERE
+				USE_YN = 'Y' 
+		) A
+		ORDER BY
+			LVL, ORD
+	</select>
+
+	<select id="getMenuAuthByRole" parameterType="string" resultType="Menu">
+		/* menu-mapper.xml(getMenuAuthByRole) */
+		SELECT 
+			URL
+			, IF(R.MENU_ID IS NULL, 'N', 'Y') AS ALLOW_YN
+		FROM
+			MENU M
+			LEFT OUTER JOIN ROLE_MENU_MAP R ON M.MENU_ID = R.MENU_ID AND ROLE_ID = #{roleId}
+		WHERE
+			USE_YN = 'Y' AND URL !=''
+	</select>
+
+	<select id="allMenu" resultType="Menu">
+		/* menu-mapper.xml(allMenu) */
+		SELECT 
+			MENU_ID
+			, MENU_CD
+			, MENU_NM
+			, LVL
+			, ORD
+			, URL
+			, UPPER_MENU_ID
+		FROM
+			MENU
+		WHERE
+			USE_YN = 'Y'
+		ORDER BY
+			LVL, ORD
+	</select>
+
+</mapper>

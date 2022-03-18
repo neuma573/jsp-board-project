@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC  "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"  "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+	<definition name="empty" template="/WEB-INF/tiles/empty.jsp" />
+
+	<definition name="error" extends="empty">
+		<put-attribute name="body" value="/WEB-INF/view/error.jsp" />
+	</definition>
+
+	<!-- view name이 xxx.empty 면 empty.jsp를 layout으로 사용한다 -->
+	<definition name="*.empty" extends="empty">
+		<put-attribute name="body" value="/WEB-INF/view/{1}.jsp" />
+	</definition>
+
+	<definition name="*/*.empty" extends="empty">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="*/*/*.empty" extends="empty">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{3}.jsp" />
+	</definition>
+
+
+	<definition name="base" template="/WEB-INF/tiles/base.jsp">
+		<put-attribute name="title" value="" />
+		<put-attribute name="left" value="/WEB-INF/tiles/left.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="*.usual" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{1}.jsp" />
+	</definition>
+
+	<definition name="*/*.usual" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{2}.jsp" />
+	</definition>
+
+	<definition name="*/*/*.usual" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{3}/{3}.jsp" />
+	</definition>
+
+	<definition name="*" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}.jsp" />
+	</definition>
+
+	<definition name="*/*" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="*/*/*" extends="base">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{3}.jsp" />
+	</definition>
+
+</tiles-definitions>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+	<conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+	<conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(%-40.40logger{39}){cyan} %clr(%-4L){cyan} %m%n%wEx</pattern>
+        </encoder>
+    </appender>
+
+    <springProperty name="app_name" source="spring.application.name" />
+    <springProperty name="svcRoot" source="app.settings.log.svc-root" />
+    <property name="file_name" value="${svcRoot}/${app_name}" />
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${file_name}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${file_name}.%d{yyyy-MM-dd}.log</fileNamePattern>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p %-40.40logger{39} %-4L %m%n%wEx</pattern>
+		</encoder>
+	</appender> 
+
+	<logger name="org.springframework" level="info"/>
+	<logger name="org.springframework.security" level="info"/>
+	<logger name="org.springframework.boot" level="info"/>
+	<logger name="com.zaxxer.hikari" level="info"/>
+	<!-- request mapping handler 정보 출력 
+	<logger name="org.springframework.web.servlet.mvc.method.annotation" level="trace"/>
+	-->
+	
+	<logger name="com.lguplus" level="debug"/>
+	<!-- mybatis 로그 끄기 
+	<logger name="com.lguplus.medialog.project.base.auth.AuthUserDao" level="info"/>
+	-->
+	
+	<springProfile name="local">
+		<logger name="jdbc" level="off" />
+		<logger name="jdbc.sqlonly" level="off" />
+		<logger name="jdbc.sqltiming" level="debug" /> <!-- ?를 값으로 치환하여 출력 -->
+		<logger name="jdbc.audit" level="off" />
+		<logger name="jdbc.resultset" level="off" />
+		<logger name="jdbc.resultsettable" level="debug" />
+		<logger name="jdbc.connection" level="off" />
+	</springProfile>
+
+
+	<springProperty name="tloRoot" source="app.settings.log.tlo-root" />
+	<springProperty name="tloMdcKey" source="app.settings.log.tlo-mdc-key" />
+	<!-- 5분 단위 로그파일에 기록 
+	-->
+	<appender name="TLO_FILE" class="ch.qos.logback.classic.sift.SiftingAppender">
+		<discriminator>
+			<key>${tloMdcKey}</key>
+			<defaultValue>${tloRoot}/unknown</defaultValue>
+		</discriminator>
+		<sift>
+			<appender name="TLO_${tloMdcKey}" class="ch.qos.logback.core.FileAppender">
+				<file>${tloMdcKey}</file>
+				<encoder>
+					<charset>UTF-8</charset>
+					<pattern>%m%n</pattern>
+				</encoder>
+			</appender>
+		</sift>
+	</appender>
+	<!-- 하루 단위 로그파일에 기록 
+	<appender name="TLO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${file_name}-svc.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${file_name}-svc.%d{yyyy-MM-dd}.log</fileNamePattern>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%m%n</pattern>
+		</encoder>
+	</appender> 
+	-->
+    <appender name="TLO_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clr(%m%n){blue}</pattern>
+        </encoder>
+    </appender>
+	<logger name="tloLogger" level="INFO" additivity="true" >
+<!-- 		<appender-ref ref="TLO_STDOUT" /> -->
+		<appender-ref ref="TLO_FILE" />
+	</logger> 
+
+
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

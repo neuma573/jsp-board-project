@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lguplus.medialog.project.base.user.UserDao">
+
+	<resultMap id="user-detail" type="User">
+		<id property="userId" column="USER_ID" />
+		<result property="userNm" column="USER_NM"/>
+		<result property="status" column="STATUS"/>
+		<result property="email" column="EMAIL"/>
+		<result property="phone" column="PHONE"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updateDt" column="UPDATE_DT"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<collection property="roles" ofType="Role">
+			<id property="roleId" column="ROLE_ID" />
+			<result property="roleNm" column="ROLE_NM"/>
+		</collection>
+	</resultMap>
+
+	<select id="selectUserList" parameterType="User" resultMap="user-detail">
+		/* user-mapper.xml(selectUserList) */
+		SELECT
+			U.*
+			, C.ROLE_ID
+			, C.ROLE_NM
+		FROM 
+			(SELECT   A.USER_ID
+			         , A.USER_NM
+			         , A.STATUS
+			         , A.EMAIL
+			         , A.PHONE
+			         , A.REG_DT
+			         , A.UPDATE_DT
+			         , A.REG_USER_ID
+			         , IFNULL(B.ROLE_ID, 'ROLE_USER') ROLE_ID
+			FROM     USER A
+			         LEFT JOIN USER_ROLE_MAP B ON  A.USER_ID = B.USER_ID
+			WHERE    A.DEL_YN = 'N'
+				<if test="status != null">
+					AND  A.STATUS = #{status}
+				</if>
+				<if test="userId != null and userId != ''">
+					AND  A.USER_ID = #{userId}
+				</if>
+				<if test="userNm != null and userNm != ''">
+					AND  A.USER_NM = #{userNm}
+				</if>
+			) U
+			INNER JOIN ROLE C ON U.ROLE_ID = C.ROLE_ID
+		WHERE 1 = 1 
+			<if test="roles != null">
+				AND  C.ROLE_ID IN
+				<foreach item="role" collection="roles" separator="," open="(" close=")">
+					#{role.roleId}
+				</foreach>
+			</if>
+	</select>	
+
+	<insert id="insertUser" parameterType="User">
+		/* user-mapper.xml(insertUser) */
+		INSERT INTO USER (
+			USER_ID
+			, USER_NM
+			, USER_PWD
+			, STATUS
+			, PHONE
+			, EMAIL
+			, REG_USER_ID
+			, DEL_YN
+			, REG_DT
+			, PWD_CHG_DT
+		) VALUES (
+			#{userId}
+			, #{userNm}
+			, #{userPwd}
+			, #{status}
+			, #{phone}
+			, #{email}
+			, #{regUserId}
+			, 'N'
+			, NOW()
+			, NOW()
+		)
+	</insert>
+
+	<insert id="insertUserRole" parameterType="UserRoleMap">
+		/* user-mapper.xml(insertUserRole) */
+		INSERT INTO USER_ROLE_MAP (
+			USER_ID
+			, ROLE_ID
+		) VALUES (
+			#{userId}
+			, #{roleId}
+		)
+	</insert>
+
+	<update id="updateUser" parameterType="User">
+		/* user-mapper.xml(updateUser) */
+		UPDATE USER
+		SET    USER_NM = #{userNm}
+		       , PHONE = #{phone}
+		       , EMAIL = #{email}
+		       , STATUS = #{status}
+		       , UPDATE_DT = NOW()
+		WHERE  USER_ID = #{userId}
+	</update>
+
+	<update id="updateUserRole" parameterType="User">
+		/* user-mapper.xml(updateUserRole) */
+		UPDATE USER_ROLE_MAP
+		SET    ROLE_ID = #{roleId}
+		WHERE  USER_ID = #{userId}
+	</update>
+
+	<update id="deleteUser" parameterType="User">
+		/* user-mapper.xml(deleteUser) */
+		UPDATE USER
+		SET    DEL_YN = 'Y'
+		WHERE  USER_ID  IN (
+			<foreach collection="list" item="user" separator=",">
+				<if test="user.userId != 'admin'">
+					#{user.userId}
+				</if>
+			</foreach>
+		)
+	</update>
+	
+	<delete id="deleteUserRole" parameterType="string">
+		/* user-mapper.xml(deleteUserRole) */
+		DELETE FROM USER_ROLE_MAP
+		WHERE  USER_ID = #{userId}
+	</delete>
+
+	<select id="selectUserPwd" parameterType="string" resultType="string">
+		/* user-mapper.xml(selectUserPwd) */
+		SELECT USER_PWD
+		FROM USER
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectLastPwds" resultType="string">
+		/* user-mapper.xml(selectLastPwds) */
+		SELECT USER_PWD
+		FROM USER_PWD_HST
+		WHERE USER_ID = #{userId}
+		ORDER BY REG_DT DESC
+		LIMIT #{limitNum}
+	</select>
+
+	<update id="updateUserPwd" parameterType="UserPassword">
+		/* user-mapper.xml(updateUserPwd) */
+		UPDATE USER
+		SET    USER_PWD = #{newPwd}
+			, PWD_CHG_DT = NOW()
+		WHERE  USER_ID = #{userId}
+	</update>
+
+	<insert id="insertUserPwdHist" parameterType="UserPassword">
+		/* user-mapper.xml(insertUserPwdHist) */
+		INSERT INTO USER_PWD_HST (USER_ID, USER_PWD, REG_DT)
+		VALUES (#{userId}, #{curPwd}, NOW())
+	</insert>
+	
+	<select id="aleadyExistId" parameterType="User" resultType="Integer">
+		SELECT COUNT(1)
+		FROM   USER
+		WHERE  USER_ID = #{userId}
+	</select>
+</mapper>

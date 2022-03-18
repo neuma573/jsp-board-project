@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lguplus.medialog.project.board.BoardDao">
+
+	<!-- 리스트 출력 -->
+		<!-- 글 갯수 -->	
+	<select id="selectBoardCount" resultType="Integer" >
+        SELECT COUNT(*)
+          FROM BOARD
+    </select>
+	
+	
+		<!-- 리스트 출력 -->
+	<select id="selectBoardList" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.PageVO">
+		SELECT * FROM
+			BOARD
+		WHERE 
+			BRD_DEL_FLAG LIKE 'N'
+		ORDER BY
+			BRD_NO DESC
+        LIMIT ${rowStart-1}, 10
+    </select> 
+    	
+    	<!-- 검색 -->
+    <select id="searchBoardList"
+		resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="String">
+		/* board-mapper.xml(searchBoardList) */
+		
+		SELECT * FROM
+			board 
+		WHERE 
+			BRD_TITLE LIKE '%${searchKeyword}%' AND BRD_DEL_FLAG LIKE 'N'
+		ORDER BY BRD_NO DESC
+	</select> 
+    
+	<!-- 글작성 -->
+	<insert id="uploadBoard"
+		parameterType="com.lguplus.medialog.project.board.BoardVO">
+		/* board-mapper.xml(uploadBoard) */
+       <selectKey resultType="int" keyProperty="brdNo" order="BEFORE">
+            SELECT IFNULL(MAX(BRD_NO),0)+1 FROM BOARD
+       </selectKey>
+		
+		INSERT INTO BOARD (
+			BRD_NO,
+			BRD_WRITER,
+			BRD_TITLE,
+			BRD_CONTENT,
+			BRD_REG_DT,
+			BRD_MOD_DT,
+			BRD_HIT,
+			BRD_RE_CNT,
+			BRD_DEL_FLAG
+			) 
+		VALUES (
+			#{brdNo}, 
+			#{brdWriter}, 
+			#{brdTitle}, 
+			#{brdContent}, 
+			now(),
+			NULL, 
+			'0', 
+			'0',
+			'N'
+		    )
+	</insert>
+	
+	<!-- 파일업로드 -->
+	<insert id="uploadFile"
+		parameterType="com.lguplus.medialog.project.board.FileVO">
+		/* board-mapper.xml(uploadFile) */
+
+		
+		INSERT INTO FILE (
+			FILE_BRD_NO,
+			FILE_NAME,
+			FILE_REAL_NAME,
+			FILE_SIZE,
+			FILE_REG_DT
+			) 
+		VALUES (
+			#{fileBrdNo}, 
+			#{fileName}, 
+			#{fileRealName}, 
+			#{fileSize},
+			now() 
+		    )
+	</insert>
+
+	<!-- 상세 -->
+	<select id="getBoardDetail"
+		parameterType="int" resultType="com.lguplus.medialog.project.board.BoardVO">
+		/* board-mapper.xml(getBoardDetail) */
+		SELECT
+			BRD_NO,
+			BRD_WRITER, 
+			BRD_TITLE, 
+			BRD_CONTENT, 
+			BRD_REG_DT,
+			BRD_MOD_DT, 
+			BRD_HIT, 
+			BRD_RE_CNT
+		FROM
+			BOARD
+		WHERE
+			BRD_NO = #{id}
+	</select>
+
+	<!-- 수정 -->
+	<update id="boardModifyRegist"
+		parameterType="com.lguplus.medialog.project.board.BoardVO">
+		/* board-mapper.xml(boardModifyRegist) */		
+		update board
+			SET BRD_TITLE = #{brdTitle},
+				BRD_CONTENT  = #{brdContent},
+				BRD_MOD_DT = now() 
+			WHERE BRD_NO = #{brdNo};		
+	</update>
+
+	<!-- 삭제 -->
+	<update id="boardDelete" parameterType="int">
+        UPDATE board
+        	SET BRD_DEL_FLAG = 'Y'
+        	WHERE BRD_NO = #{id}
+    </update>
+
+	<!-- 조회수 -->
+	<update id="boardViewUpdate">
+		update board
+			set BRD_HIT = BRD_HIT + 1
+			where BRD_NO = #{id}
+	</update>
+
+	<!-- 댓글작성 -->
+	<insert id="commentPost"
+		parameterType="com.lguplus.medialog.project.board.ReplyVO">
+		/* board-mapper.xml(commentPost) */
+		INSERT INTO COMMENT (
+			RE_BRD_NO,
+			RE_PARENTS,
+			RE_DEPTH,
+			RE_ORDER,
+			RE_WRITER,
+			RE_CONTENT,
+			RE_REG_DT,
+			RE_DEL_FLAG
+			) 
+		VALUES (
+				#{reBrdNo}, 
+				0, 
+				0, 
+				0, 
+				#{reWriter}, 
+				#{reContent}, 
+				now(),
+				'N'
+				
+		    )
+	</insert>
+	
+	<update id="commentDepthUpdate" parameterType="com.lguplus.medialog.project.board.ReplyVO">
+		UPDATE 
+			COMMENT
+		SET
+			RE_PARENTS=RE_NO,
+			RE_DEPTH=0,
+			RE_ORDER=RE_NO;
+	</update>
+	
+	<!-- 댓글 리스트 출력 -->
+	<select id="openCommentList"
+		resultType="com.lguplus.medialog.project.board.ReplyVO">
+		/* board-mapper.xml(openCommentList) */
+		
+				<![CDATA[
+		SELECT
+			RE_NO,
+			RE_BRD_NO,
+			RE_PARENTS,
+			RE_DEPTH,
+			RE_ORDER,
+			RE_WRITER,
+			RE_CONTENT,
+			RE_REG_DT
+		FROM
+			comment
+		WHERE
+			RE_BRD_NO = #{reBrdNo} AND RE_DEL_FLAG='N'
+		ORDER BY
+			RE_ORDER
+			
+				]]>
+	
+	</select>
+	<!-- 댓글 수 추가-->
+	<update id="addCommentCnt">
+		update
+			board
+		set
+			BRD_RE_CNT = BRD_RE_CNT+ 1
+		where
+			BRD_NO = #{brdNo}
+	
+	</update>
+	<!-- 댓글 수 빼기-->
+	<update id="subCommentCnt">
+		update
+			board
+		set
+			BRD_RE_CNT = BRD_RE_CNT- 1
+		where
+			BRD_NO = #{brdNo}
+	
+	</update>
+	
+	<!-- 댓삭제 -->
+	<update id="commentDelete" parameterType="int">
+        
+        UPDATE comment
+        	SET RE_DEL_FLAG = 'Y'
+        WHERE RE_NO = #{id}
+    </update>
+    
+    <!-- 대댓글작성 -->
+	<insert id="commentReplyPost"
+		parameterType="com.lguplus.medialog.project.board.ReplyVO">
+		/* board-mapper.xml(commentReplyPost) */
+		INSERT INTO COMMENT (
+			RE_BRD_NO,
+			RE_PARENTS,
+			RE_DEPTH,
+			RE_ORDER,
+			RE_WRITER,
+			RE_CONTENT,
+			RE_REG_DT,
+			RE_DEL_FLAG
+			) 
+		VALUES (
+				#{reBrdNo}, #{reParents}, #{reDepth}, 0, #{reWriter}, #{reContent}, now(), 'N'
+				
+		    )
+	</insert>
+	
+		<!-- 대댓글 작성 뎁스 검색 -->
+	<select id="getCommentDepth"
+		parameterType="int" resultType="int">
+		/* board-mapper.xml(getCommentDepth) */
+		select
+			RE_DEPTH
+		from
+			comment
+		where
+			RE_NO = #{id}
+	</select>
+
+    
+    <insert id="insertBoard6Reply" parameterType="com.lguplus.medialog.project.board.ReplyVO" >
+        <selectKey resultType="String" keyProperty="reNo" order="BEFORE">
+            SELECT IFNULL(MAX(RE_NO),0)+1 FROM COMMENT
+        </selectKey>
+    
+        INSERT INTO COMMENT(RE_BRD_NO, RE_NO, RE_WRITER, RE_CONTENT, RE_REG_DT, RE_ORDER, RE_DEL_FLAG, RE_PARENTS, RE_DEPTH)
+        VALUES (#{reBrdNo}, #{reNo}, #{reWriter}, #{reContent}, NOW(), #{reOrder}, 'N',
+                   <choose>
+                       <when test="reParents==null">#{reNo}, 0</when>
+                       <otherwise>#{reParents}, #{reDepth}</otherwise>
+                   </choose>
+               )
+    </insert>      
+    
+    <select id="selectBoard6ReplyParent" resultType="com.lguplus.medialog.project.board.ReplyVO" parameterType="String">
+        SELECT RE_BRD_NO, RE_DEPTH+1 RE_DEPTH, RE_ORDER
+          FROM COMMENT
+         WHERE RE_NO=#{reParents}
+    </select>
+    
+    <update id="updateBoard6ReplyOrder" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
+        UPDATE COMMENT
+           SET RE_ORDER = RE_ORDER + 1 
+         WHERE RE_BRD_NO=#{reBrdNo} AND RE_ORDER>#{reOrder}       
+    </update> 
+    
+    <select id="selectBoard6ReplyMaxOrder" resultType="Integer" parameterType="String">
+        SELECT IFNULL(MAX(RE_ORDER),0)+1
+          FROM COMMENT
+         WHERE RE_BRD_NO=#{reBrdNo}
+    </select>
+    
+    
+<!-- 자식 카운트 -->    
+    <select id="selectBoard6ReplyChild" resultType="Integer" parameterType="String">
+        SELECT COUNT(*)
+          FROM COMMENT
+         WHERE RE_PARENTS=#{reParents} AND RE_NO!=#{reParents} AND RE_DEL_FLAG='N'
+    </select>
+
+
+    <update id="updateBoard6ReplyOrder4Delete" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
+        UPDATE COMMENT COM1
+         INNER JOIN COMMENT COM2 ON COM2.RE_BRD_NO=COM1.RE_BRD_NO AND COM1.RE_ORDER >COM2.RE_ORDER
+           SET COM1.RE_ORDER = COM1.RE_ORDER - 1 
+         WHERE COM2.RE_NO=#{reNo} 
+    </update>
+    <update id="deleteBoard6Reply" parameterType="String"> 
+        UPDATE COMMENT
+           SET RE_DEL_FLAG='Y' 
+         WHERE RE_NO=#{reNo}       
+    </update>
+    
+    <select id="selectBoard6FileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="int">
+        SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
+          FROM FILE
+         WHERE FILE_BRD_NO=#{fileBrdNo}
+         ORDER BY FILE_NO DESC 
+    </select> 
+
+
+</mapper>

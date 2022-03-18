@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lguplus.medialog.project.base.auth.AuthUserDao">
+
+	<select id="getByUsername" parameterType="string" resultType="User">
+		/* authuser-mapper.xml(getByUsername) */
+		SELECT 
+			USER_ID, USER_PWD, STATUS, USER_NM, PWD_CHG_DT, LOGIN_FAIL_CNT
+		FROM
+			USER
+		WHERE
+			USER_ID = #{userId}
+	</select>
+
+	<select id="getRoles" parameterType="string" resultType="string">
+		/* authuser-mapper.xml(getRoles) */
+		SELECT 
+			r.ROLE_ID
+		FROM 
+			USER u 
+			INNER JOIN USER_ROLE_MAP r ON u.USER_ID = r.USER_ID
+		WHERE 
+			u.USER_ID = #{userId}
+	</select>
+	
+	<update id="increaseFailCount" parameterType="string">
+		/* authuser-mapper.xml(increaseFailCount) */
+		UPDATE
+			USER
+		SET
+			LOGIN_FAIL_CNT = IFNULL(LOGIN_FAIL_CNT, 0) + 1 
+		WHERE
+			USER_ID = #{userId}
+	</update>
+
+	<update id="setUserStatus" parameterType="User">
+		/* authuser-mapper.xml(setUserStatus) */
+		UPDATE
+			USER
+		SET
+			STATUS = #{status}
+		WHERE
+			USER_ID = #{userId}
+	</update>
+
+	<update id="setLoginInfo" parameterType="string">
+		/* authuser-mapper.xml(setLoginInfo) */
+		UPDATE
+			USER
+		SET
+			LAST_LOGIN_DT = NOW()
+			, LOGIN_FAIL_CNT = 0
+		WHERE
+			USER_ID = #{userId}
+	</update>
+
+	<select id="getUser" parameterType="string" resultType="User">
+		/* authuser-mapper.xml(getUser) */
+		SELECT 
+			U.USER_ID, STATUS, USER_NM, PHONE
+			, I.ISS_LOCK_YN AS "sms.issLockYn"
+			, I.REG_DT AS "sms.regDt"
+		FROM
+			USER U
+			LEFT OUTER JOIN USER_AUTH_NUM I ON U.USER_ID = I.USER_ID
+		WHERE
+			U.USER_ID = #{userId}
+	</select>
+	
+	<insert id="addSmsAuthNum" parameterType="SmsAuthNum">
+		/* authuser-mapper.xml(addSmsAuthNum) */
+		INSERT INTO 
+			USER_AUTH_NUM(USER_ID, ISS_NUM, REG_DT, AUTH_FAIL_CNT, ISS_LOCK_YN)
+		VALUES 
+			(#{userId}, #{issNum}, #{regDt}, 0, 'N')
+	</insert>
+
+	<select id="getSmsAuthNum" parameterType="string" resultType="SmsAuthNum">
+		/* authuser-mapper.xml(getSmsAuthNum) */
+		SELECT 
+			USER_ID, ISS_NUM, REG_DT, AUTH_FAIL_CNT, ISS_LOCK_YN
+		FROM
+			USER_AUTH_NUM
+		WHERE
+			USER_ID = #{userId}
+	</select>
+
+	<select id="getSmsAuthNumByNum" parameterType="string" resultType="SmsAuthNum">
+		/* authuser-mapper.xml(getSmsAuthNumByNum) */
+		SELECT 
+			USER_ID, ISS_NUM, REG_DT, AUTH_FAIL_CNT, ISS_LOCK_YN
+		FROM
+			USER_AUTH_NUM
+		WHERE
+			ISS_NUM = #{issNum}
+	</select>
+
+	<update id="setSmsAuthNum" parameterType="SmsAuthNum">
+		/* authuser-mapper.xml(setSmsAuthNum) */
+		UPDATE
+			USER_AUTH_NUM
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="issNum != null">
+				ISS_NUM = #{issNum},
+			</if>
+			<if test="regDt != null">
+				REG_DT = #{regDt},
+			</if>
+			<if test="authFailCnt != null">
+				AUTH_FAIL_CNT = #{authFailCnt},
+			</if>
+			<if test="issLockYn != null">
+				ISS_LOCK_YN = #{issLockYn},
+			</if>
+		</trim>
+		WHERE
+			USER_ID = #{userId}
+	</update>
+
+	<select id="getSmsAuthPhone" parameterType="SmsAuthNum" resultType="string">
+		/* authuser-mapper.xml(getSmsAuthPhone) */
+		SELECT 
+			PHONE
+		FROM
+			USER U
+			INNER JOIN USER_AUTH_NUM I ON U.USER_ID = I.USER_ID
+		WHERE
+			U.USER_ID = #{userId} AND I.ISS_NUM = #{issNum}
+	</select>
+
+	<select id="getByUsernameAndDomain" resultType="User">
+		/* authuser-mapper.xml(getByUsernameAndDomain) */
+		SELECT 
+			USER_ID, USER_DOMAIN, USER_PWD, STATUS, USER_NM, PWD_CHG_DT, LOGIN_FAIL_CNT
+		FROM
+			USER
+		WHERE
+			USER_ID = #{userId} AND USER_DOMAIN = #{userDomain}
+	</select>
+
+	<select id="getRolesByUsernameAndDomain" resultType="string">
+		/* authuser-mapper.xml(getRolesByUsernameAndDomain) */
+		SELECT 
+			r.ROLE_ID
+		FROM 
+			USER u 
+			INNER JOIN USER_ROLE_MAP r ON u.USER_ID = r.USER_ID
+		WHERE 
+			u.USER_ID = #{userId} AND u.USER_DOMAIN = #{userDomain}
+	</select>
+
+</mapper>
