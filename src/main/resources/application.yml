@@ -15,7 +15,7 @@ spring:
     # 클라이언트가 특정 포맷으로 요청하면 LocalDateTime 타입에 자동으로 적용되도록 설정
     format.date-time: yyyyMMddHHmmss
   servlet.multipart:
-    max-file-size: 128KB
+    max-file-size: 4096KB
 
 
 mybatis:

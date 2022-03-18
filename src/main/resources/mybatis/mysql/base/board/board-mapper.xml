@@ -13,14 +13,60 @@
 	
 		<!-- 리스트 출력 -->
 	<select id="selectBoardList" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.PageVO">
-		SELECT * FROM
+		SELECT
+			BRD_NO,
+			BRD_WRITER,
+			BRD_TITLE,
+			BRD_REG_DT,
+			BRD_HIT,
+			BRD_RE_CNT,
+			BRD_DEL_FLAG
+		FROM
 			BOARD
 		WHERE 
 			BRD_DEL_FLAG LIKE 'N'
 		ORDER BY
 			BRD_NO DESC
         LIMIT ${rowStart-1}, 10
-    </select> 
+    </select>
+    
+    
+    <select id="getList" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.Criteria">
+        <![CDATA[
+	SELECT
+	      BRD_NO,
+	      BRD_WRITER,
+	      BRD_TITLE,
+	      BRD_CONTENT,
+	      BRD_REG_DT,
+	      BRD_HIT,
+	      BRD_RE_CNT,
+	      BRD_DEL_FLAG
+    FROM
+        (
+            select
+            	 @ROWNUM:=@ROWNUM+1 AS rowNum,
+            	 BRD_NO,
+            	 BRD_WRITER,
+            	 BRD_TITLE,
+            	 BRD_CONTENT,
+            	 BRD_REG_DT,
+            	 BRD_HIT,
+            	 BRD_RE_CNT,
+            	 BRD_DEL_FLAG
+            from
+            	BOARD
+            where
+            	(@ROWNUM:=0)=0 and @ROWNUM<= ${pageNum} * ${amount}
+        ) as b
+	WHERE b.rowNum> (${pageNum}-1) *${amount}
+
+	order by brd_no desc;
+        ]]>
+
+    </select>
+    
+    
     	
     	<!-- 검색 -->
     <select id="searchBoardList"

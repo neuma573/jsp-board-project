@@ -29,12 +29,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.lguplus.medialog.project.common.utils.SpringUtils;
+
 
 
 @Controller
 @RequestMapping("/page/board")
 public class BoardController {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
 	@Autowired
 	private BoardService svc;
 	private File file;
@@ -44,17 +47,23 @@ public class BoardController {
 	//게시판 리스트 출력
 	@GetMapping("")
 	public String boardList(PageVO pageVO, Model model) throws Exception {
-
-        pageVO.pageCalculate(svc.selectBoardCount() ); // startRow, endRow
-
-        List<?> listview   = svc.selectBoardList(pageVO);
-       
-        model.addAttribute("list", listview);
-        model.addAttribute("pageVO", pageVO);
-
-        return "board/board.empty";
-}
-	
+		pageVO.pageCalculate(svc.selectBoardCount() );
+		
+		List<?> listview = svc.selectBoardList(pageVO);
+		
+		model.addAttribute("list", listview);
+		model.addAttribute("pageVO", pageVO);
+		
+		return "board/board.empty";
+	}
+//	public String getList(Criteria criteria, Model model){
+//		logger.info("---------------");
+//		logger.info("list");
+//		logger.info("---------------");
+//		model.addAttribute("list" , svc.getList(criteria));
+//		model.addAttribute("pageMaker" , new PageVO(svc.getTotal(), 10, criteria));
+//		return "board/board.empty";
+//	}
 	//검색결과 출력
 	@PostMapping("result")
 	public String boardSearchList(@RequestParam String searchKeyword, ModelMap modelMap) throws Exception {
@@ -136,8 +145,7 @@ public class BoardController {
 	@RequestMapping(value="/pageWrite", method = RequestMethod.POST)
 	public String uploadBoard(BoardVO board, @RequestParam("uploadFile") MultipartFile file, FileVO fileVO) throws Exception {
 
-	
-		board.setBrdWriter("foo");
+		board.setBrdWriter(SpringUtils.getCurrentUser().getUserId());
 		svc.uploadBoard(board);
 		if(!file.isEmpty()) {
 			System.out.println("파일업로드 로그"+file);
@@ -146,7 +154,7 @@ public class BoardController {
 			System.out.println(file.getOriginalFilename());
 			uploadFile(fileVO, file, board);
 		}
-		return "redirect:/page/board";
+		return "board/board.empty";
 	}
 	
 	//파일업로드
@@ -205,7 +213,7 @@ public class BoardController {
     //댓글저장
     @RequestMapping(value = "/commentPost")
     public String board6ReplySave(ReplyVO boardReplyInfo) {
-        boardReplyInfo.setReWriter("foo");
+        boardReplyInfo.setReWriter(SpringUtils.getCurrentUser().getUserId());
         svc.insertBoardReply(boardReplyInfo);
         svc.addCommentCnt(boardReplyInfo.getReBrdNo());
 

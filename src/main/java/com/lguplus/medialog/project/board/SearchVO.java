@@ -3,7 +3,7 @@ package com.lguplus.medialog.project.board;
 import lombok.Data;
 
 @Data
-public class SearchVO extends  PageVO  {
+public class SearchVO extends PageVO  {
 
     private String bgno;                       // 게시판 그룹
     private String searchKeyword = "";         // 검색 키워드

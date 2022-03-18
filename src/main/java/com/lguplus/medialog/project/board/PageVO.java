@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class PageVO {
-    private Integer displayRowCount = 10;           // 출력할 데이터 개수
+    private Integer displayRowCount = 10;		    // 출력할 데이터 개수
     private Integer rowStart;                       // 시작행번호
     private Integer rowEnd;                         // 종료행 번호
     private Integer totPage;                        // 전체 페이수
@@ -13,6 +13,7 @@ public class PageVO {
     private Integer pageStart;                      // 시작페이지
     private Integer pageEnd;                        // 종료페이지
 
+    
     /**
      * 전체 데이터 개수(total)를 이용하여 페이지수 계산. 
      */
@@ -45,7 +46,21 @@ public class PageVO {
 
 		return page;
 	}
+//	private int pageCount;
+//	private int startPage;
+//	private int endPage;
+//	private int realEnd;
+//	private boolean prev, next;
+//	private int total;
+//	private Criteria criteria;
+//	
+//	public PageVO() {
+//		;
+//	}
+//	
 
+//	
+	
 }
 
 

@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 // 매퍼 클래스
 @Mapper
 public interface BoardDao {
+	public List<BoardVO> getList(Criteria criteria);
+	
 	public Integer selectBoardCount();
 	
 	List<BoardVO> searchBoardList(String keyword);

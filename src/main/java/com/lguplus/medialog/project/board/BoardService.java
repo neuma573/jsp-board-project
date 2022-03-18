@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class BoardService {
 	@Autowired
 	private BoardDao dao;
-	private DataSourceTransactionManager txManager;
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	long start = System.currentTimeMillis();
@@ -32,6 +31,11 @@ public class BoardService {
     public Integer selectBoardCount() throws Exception {
 		return dao.selectBoardCount();
     }
+    
+	public List<BoardVO> getList(Criteria criteria){
+		return dao.getList(criteria);
+	}
+    
 	public List<BoardVO> searchBoardList(String keyword)  {
 		return dao.searchBoardList(keyword);
 	}

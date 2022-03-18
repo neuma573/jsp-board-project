@@ -13,6 +13,12 @@
 
         <h1>게시판 메인</h1>
 
+        <form action="/page/board" method="post">
+        <input id="displayRowCount"
+        placeholder="1~100" name="displayRowCount"
+        input type='number' min='1' max='100' required="required">
+            <button type="submit">게시글 표시</button>
+        </form>   
           <table border="2" width="770">
             <tr>
               <th width="60">번호</th>
@@ -42,8 +48,9 @@
                       <c:forEach var="i" begin="${pageVO.pageStart}" end="${pageVO.pageEnd}" step="1">
                           <c:url var="pageLink" value="board">
                           <c:param name="page" value="${i}" />
-                          </c:url>                       
+                          </c:url>
                               <a href="${pageLink}"><c:out value="${i}"/></a>
+
                       </c:forEach>
                   </div>
                   </c:if>  
@@ -58,13 +65,17 @@
 
 
         <a href="/page/board/page">글쓰기</a>
-        <a href="/page/board/api">API 호출</a>
+        <!-- <a href="/page/board/api">API 호출</a> -->
         <form action="/page/board/result" method="post">
           <div>
+            <select name="searchKeyword" id="searchKeyword" required="required">
+              <option value="title">제목으로 검색</option>
+              <option value="content">내용으로 검색</option>
+             </select>
               <input id="searchKeyword"
               placeholder="검색키워드입력" name="searchKeyword"
               maxlength="10" required="required"
-              pattern=".{3,10}">
+              pattern=".{1,10}">
               <button type="submit">검색</button>
           </div>
         </form>   
