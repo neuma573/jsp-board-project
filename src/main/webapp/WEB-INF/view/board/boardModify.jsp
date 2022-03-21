@@ -68,7 +68,7 @@
 </tr>
 <tr><td>첨부파일 이름 : </td><td>${file.fileRealName} <a href="/page/board/fileDelete?id=${file.fileNo}&bid=${board.brdNo}">삭제</a></td></tr>
 </table>
- <input type="file" name="file" value="file" name="SelectFile" />
+ <input type="file" name="uploadFile" name="uploadFile" />
 <button type="submit">수정완료</button>
 <a href="javascript:history.back()">돌아가기</button>
   </form>
