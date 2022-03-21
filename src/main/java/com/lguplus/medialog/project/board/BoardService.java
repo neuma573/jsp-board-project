@@ -32,28 +32,44 @@ public class BoardService {
 		return dao.selectBoardCount();
     }
     
-	public List<BoardVO> getList(Criteria criteria){
-		return dao.getList(criteria);
+	public List<BoardVO> searchBoardListByTitle(String keyword)  {
+		return dao.searchBoardListByTitle(keyword);
 	}
-    
-	public List<BoardVO> searchBoardList(String keyword)  {
-		return dao.searchBoardList(keyword);
+	public List<BoardVO> searchBoardListByContent(String keyword)  {
+		return dao.searchBoardListByContent(keyword);
 	}
+	
     public List<?> selectBoardList(PageVO param) throws Exception {
     	return dao.selectBoardList(param);
     }
     public String boardSearchList() {
     	return dao.boardSearchList();
     }
-	public void uploadBoard(BoardVO board) {
-	    dao.uploadBoard(board);
+	public void uploadBoard(BoardVO param) {
+        if (param.getBrdNo() == null) {
+            if (param.getBrdParents() != null) {
+            	BoardVO brdInfo = dao.selectBoardParent(param.getBrdParents());
+                param.setBrdDepth(brdInfo.getBrdDepth());
+                param.setBrdOrder(brdInfo.getBrdOrder() + 1);
+                dao.updateBoardOrder(brdInfo);
+            } else {
+                Integer brdorder = dao.selectBoardMaxOrder(param.getBrdNo());
+                param.setBrdOrder(brdorder);
+            }
+            dao.uploadBoard(param);
+        }
 	}
+  
+	
+	
+	
+	
+	
 	public void uploadFile(FileVO fileVO) {
 		dao.uploadFile(fileVO);
 	}
-	
-	
-	public BoardVO getBoardDetail(int id) throws Exception{
+
+	public BoardVO getBoardDetail(Integer id){
 		
 		return dao.getBoardDetail(id);
 	}
@@ -63,11 +79,11 @@ public class BoardService {
         
     }
     // 게시글 삭제
-    public void boardDelete(int id) throws Exception {
+    public void boardDelete(Integer id) throws Exception {
         dao.boardDelete(id);
     }
 	// 조회수 올리기
-	public int boardViewUpdate(int id) throws Exception {
+	public int boardViewUpdate(Integer id) throws Exception {
 		return dao.boardViewUpdate(id);
 	}
 	
@@ -89,7 +105,7 @@ public class BoardService {
 	        }
 	    }   
 
-	public List<ReplyVO> openCommentList(int id){
+	public List<ReplyVO> openCommentList(Integer id){
 		return dao.openCommentList(id);
 	}
 	public void addCommentCnt(String id) {
@@ -126,8 +142,14 @@ public class BoardService {
         return true;
     } 
 
-    public List<?> selectBoard6FileList(int id) {
+    public List<?> selectBoard6FileList(Integer id) {
     	return dao.selectBoard6FileList(id);
+    }
+    public FileVO getFileList(Integer id) {
+    	return dao.getFileList(id);
+    }
+    public void deleteFile(String id) {
+    	dao.deleteFile(id);
     }
 
 

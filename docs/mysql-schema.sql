@@ -71,6 +71,10 @@ CREATE TABLE `BOARD` (
   `BRD_NO` int(11) NOT NULL AUTO_INCREMENT COMMENT '글ID',
   `BRD_WRITER` varchar(20) COLLATE utf8mb3_unicode_ci NOT NULL COMMENT '작성자',
   `BRD_TITLE` varchar(100) COLLATE utf8mb3_unicode_ci DEFAULT NULL COMMENT '글제목',
+  `BRD_ORIGIN` int(11) COLLATE utf8mb3_unicode_ci DEFAULT NULL COMMENT '최상위',
+  `BRD_PARENTS` int(11) NOT NULL COMMENT '부모게시글',
+  `BRD_DEPTH` int(11) NOT NULL COMMENT '게시글깊이수준',
+  `BRD_ORDER` int(11) NOT NULL COMMENT '게시글순서',
   `BRD_CONTENT` text NOT NULL COMMENT '내용',
   `BRD_REG_DT` datetime NOT NULL COMMENT '생성일',
   `BRD_MOD_DT` datetime DEFAULT NULL COMMENT '수정일',
@@ -100,6 +104,7 @@ CREATE TABLE `FILE` (
   `FILE_REAL_NAME` varchar(100) NOT NULL COMMENT '실제이름',
   `FILE_SIZE` long NOT NULL COMMENT '파일사이즈',
   `FILE_REG_DT` datetime NOT NULL COMMENT '생성일',
+  `FILE_DEL_FLAG` varchar(1) NOT NULL COMMENT '삭제여부',
   PRIMARY KEY (`FILE_NO`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci COMMENT='파일';
 

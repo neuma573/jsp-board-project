@@ -13,7 +13,7 @@
 
         <h1>게시판 메인</h1>
 
-        <form action="/page/board" method="post">
+        <form action="/page/board/setPageCnt" method="post">
         <input id="displayRowCount"
         placeholder="1~100" name="displayRowCount"
         input type='number' min='1' max='100' required="required">
@@ -34,7 +34,7 @@
                 <c:url value="/page/board/view" var="url">
                   <c:param name="id" value="${li.brdNo}" />
                   </c:url>
-                <td><a href="${url}">${li.brdTitle}</a></td>
+                <td style="text-align: left;"> <a href="${url}"><c:set var="re" value="ㄴ" /><c:forEach var="i" begin="1" end="${li.brdDepth}" step="1"><c:out value="${re}"></c:out></c:forEach>${li.brdTitle}</a></td>
                 <td>${li.brdWriter}</td>
                 <td>${li.brdRegDt}</td>
                 <td>${li.brdHit}</td>
@@ -43,8 +43,15 @@
             </c:forEach> <!-- Paging 처리 -->
             <tr>
               <td colspan="7" align="center" height="40">
+
                 <c:if test="${pageVO.totPage>1}">
                   <div class="paging">
+                    <c:if test="${pageVO.hasPrev}">
+                      <c:url var="pageLinkPrev" value="board">
+                      <c:param name="page" value="${pageVO.pageStart-1}" />
+                    </c:url>
+                    <a href="${pageLinkPrev}">[이전으로]</a>
+                    </c:if>
                       <c:forEach var="i" begin="${pageVO.pageStart}" end="${pageVO.pageEnd}" step="1">
                           <c:url var="pageLink" value="board">
                           <c:param name="page" value="${i}" />
@@ -52,8 +59,15 @@
                               <a href="${pageLink}"><c:out value="${i}"/></a>
 
                       </c:forEach>
+                      <c:if test="${pageVO.hasNext}">
+                        <c:url var="pageLinkNext" value="board">
+                        <c:param name="page" value="${pageVO.pageEnd+1}" />
+                      </c:url>
+                      <a href="${pageLinkNext}">[다음으로]</a>
+                      </c:if> 
                   </div>
-                  </c:if>  
+                  </c:if>
+ 
               </td>
             </tr>
           </table> 
@@ -68,7 +82,7 @@
         <!-- <a href="/page/board/api">API 호출</a> -->
         <form action="/page/board/result" method="post">
           <div>
-            <select name="searchKeyword" id="searchKeyword" required="required">
+            <select name="type" id="type" required="required">
               <option value="title">제목으로 검색</option>
               <option value="content">내용으로 검색</option>
              </select>

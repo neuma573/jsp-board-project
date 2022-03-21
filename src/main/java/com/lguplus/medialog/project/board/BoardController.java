@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -41,12 +42,24 @@ public class BoardController {
 	@Autowired
 	private BoardService svc;
 	private File file;
-
-
+	HttpSession session;
+	
+	//페이지에 표시할 게시글 수 세션에 넣기
+	@RequestMapping(value="/setPageCnt", method = {RequestMethod.POST})
+	public String setPageCnt(HttpSession session, @RequestParam(value = "displayRowCount") Integer displayRowCount) {
+		session.setAttribute("displayRowCount", displayRowCount);
+		return "redirect:/page/board";
+	}
 	
 	//게시판 리스트 출력
 	@GetMapping("")
-	public String boardList(PageVO pageVO, Model model) throws Exception {
+	public String boardList(HttpSession session, PageVO pageVO, Model model) throws Exception {
+		
+		
+		if(session.getAttribute("displayRowCount")!=null) {
+		int temp = Integer.parseInt(session.getAttribute("displayRowCount").toString());
+		pageVO.setDisplayRowCount((Integer)temp);
+		}
 		pageVO.pageCalculate(svc.selectBoardCount() );
 		
 		List<?> listview = svc.selectBoardList(pageVO);
@@ -56,19 +69,22 @@ public class BoardController {
 		
 		return "board/board.empty";
 	}
-//	public String getList(Criteria criteria, Model model){
-//		logger.info("---------------");
-//		logger.info("list");
-//		logger.info("---------------");
-//		model.addAttribute("list" , svc.getList(criteria));
-//		model.addAttribute("pageMaker" , new PageVO(svc.getTotal(), 10, criteria));
-//		return "board/board.empty";
-//	}
+	
+
 	//검색결과 출력
 	@PostMapping("result")
-	public String boardSearchList(@RequestParam String searchKeyword, ModelMap modelMap) throws Exception {
-        List<BoardVO> listview = svc.searchBoardList(searchKeyword);
-        modelMap.addAttribute("list", listview);
+	public String boardSearchList(@RequestParam(value = "type") String type, @RequestParam(value = "searchKeyword") String searchKeyword, ModelMap modelMap) throws Exception {
+		if(type.equals("title")) {
+			List<BoardVO> listview = svc.searchBoardListByTitle(searchKeyword);
+			modelMap.addAttribute("list", listview);
+		}
+		else {
+			List<BoardVO> listview = svc.searchBoardListByContent(searchKeyword);
+			modelMap.addAttribute("list", listview);
+		}
+		
+		
+        
         return "board/result.empty";
 }	
 	//다운로드
@@ -120,16 +136,14 @@ public class BoardController {
 	
     //게시판 게시글 디테일
 	@GetMapping("view")
-	public String openBoardDetail(@RequestParam int id, Model model) throws Exception {
+	public String openBoardDetail(@RequestParam Integer id, Model model) throws Exception {
 		List<ReplyVO> list = svc.openCommentList(id);
-		List<?> listview = svc.selectBoard6FileList(id);
+		FileVO listview = svc.getFileList(id);
 		model.addAttribute("listview",listview);
 		model.addAttribute("list",list);
 		svc.boardViewUpdate(id);
 		BoardVO board = svc.getBoardDetail(id);
 		model.addAttribute("board",board);
-		
-
 		
 		return "board/view.empty";
 	}
@@ -148,13 +162,25 @@ public class BoardController {
 		board.setBrdWriter(SpringUtils.getCurrentUser().getUserId());
 		svc.uploadBoard(board);
 		if(!file.isEmpty()) {
-			System.out.println("파일업로드 로그"+file);
-			System.out.println(file.getName());
-			System.out.println(file.getSize());
+			logger.info("파일업로드 로그"+file);
+			logger.info(file.getName());
+			logger.info(null, file.getSize());
 			System.out.println(file.getOriginalFilename());
 			uploadFile(fileVO, file, board);
 		}
-		return "board/board.empty";
+		return "redirect:/page/board";
+	}
+	//게시판 답글작성 폼 호출
+	@RequestMapping("/boardReply")
+	public String board(@RequestParam("id") Integer id, @RequestParam("origin") Integer origin, Model model) {
+        BoardVO board = svc.getBoardDetail(id);
+        model.addAttribute("board", board);    
+		List<?> listview = svc.selectBoard6FileList(id);
+		model.addAttribute("listview",listview);
+    	model.addAttribute("id", id);
+    	model.addAttribute("origin", origin);
+		
+		return "board/boardReply.empty";
 	}
 	
 	//파일업로드
@@ -179,32 +205,45 @@ public class BoardController {
         fileVO.setFileName(storedFileName);
         svc.uploadFile(fileVO);
 	}
+	//파일삭제
+	@RequestMapping(value="fileDelete")
+	public String deleteFile(@RequestParam("id") String id,@RequestParam("bid") Integer bid) throws IOException{
+		svc.deleteFile(id);
+		
+		return "redirect:/page/board/boardModify?id="+bid;
+	}
 	
 	//게시판 수정폼 호출
     @RequestMapping(value="boardModify")
-    public String boardModify(@RequestParam("id") int id, Model model) throws Exception {
+    public String boardModify(@RequestParam("id") Integer id, Model model) throws Exception {
         BoardVO board = svc.getBoardDetail(id);
         model.addAttribute("board", board);    
-		List<?> listview = svc.selectBoard6FileList(id);
-		model.addAttribute("listview",listview);
+		FileVO file = svc.getFileList(id);
+		model.addAttribute("file",file);
         
         return "board/boardModify.empty";
         
     }
     
     // 게시판 글 수정
-    @RequestMapping(value="boardModifyRegist")
-    public String boardModifyRegist(BoardVO board) throws Exception {
+    @RequestMapping(value="/boardModifyRegist", method = RequestMethod.POST)
+    public String boardModifyRegist(@RequestParam("uploadFile") MultipartFile file, FileVO fileVO, BoardVO board) throws Exception {
 		String formatDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.Sec"));
 		board.setBrdModDt(formatDate);
 		svc.boardModifyRegist(board);
-			
+		if(!file.isEmpty()) {
+			logger.info("파일업로드 로그"+file);
+			logger.info(file.getName());
+			logger.info(null, file.getSize());
+			System.out.println(file.getOriginalFilename());
+			uploadFile(fileVO, file, board);
+		}	
 		return "redirect:/page/board";
     }
     
     //게시판 글삭제
     @RequestMapping(value="/boardDelete")
-    public String boardDelete(@RequestParam("id") int id) throws Exception {
+    public String boardDelete(@RequestParam("id") Integer id) throws Exception {
         
         svc.boardDelete(id);
         return "redirect:/page/board";
@@ -212,7 +251,7 @@ public class BoardController {
     
     //댓글저장
     @RequestMapping(value = "/commentPost")
-    public String board6ReplySave(ReplyVO boardReplyInfo) {
+    public String boardReplySave(ReplyVO boardReplyInfo) {
         boardReplyInfo.setReWriter(SpringUtils.getCurrentUser().getUserId());
         svc.insertBoardReply(boardReplyInfo);
         svc.addCommentCnt(boardReplyInfo.getReBrdNo());
@@ -223,7 +262,7 @@ public class BoardController {
     
     //댓삭제
     @RequestMapping(value = "/commentDelete")
-    public String board6ReplyDelete(@RequestParam("id") String id, @RequestParam("bid") String bid, ReplyVO boardReplyInfo) {
+    public String boardReplyDelete(@RequestParam("id") String id, @RequestParam("bid") String bid, ReplyVO boardReplyInfo) {
         
         if (!svc.deleteBoard6Reply(id)) {
             return "board/BoardFailure";
@@ -236,7 +275,7 @@ public class BoardController {
     
 //    대댓입력창 호출
     @RequestMapping(value="/commentReply")
-    public String commentReply(@RequestParam("id") int id, @RequestParam("bid") int bid, Model model) throws Exception {
+    public String commentReply(@RequestParam("id") int id, @RequestParam("bid") Integer bid, Model model) throws Exception {
     	model.addAttribute("id", id);
     	model.addAttribute("bid", bid);
     	return "board/commentReply.empty";

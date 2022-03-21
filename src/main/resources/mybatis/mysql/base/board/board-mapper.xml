@@ -20,56 +20,19 @@
 			BRD_REG_DT,
 			BRD_HIT,
 			BRD_RE_CNT,
-			BRD_DEL_FLAG
+			BRD_DEL_FLAG,
+			BRD_DEPTH
 		FROM
 			BOARD
 		WHERE 
 			BRD_DEL_FLAG LIKE 'N'
 		ORDER BY
-			BRD_NO DESC
-        LIMIT ${rowStart-1}, 10
+			BRD_ORIGIN DESC,BRD_ORDER ASC
+        LIMIT ${rowStart-1}, #{displayRowCount}
     </select>
-    
-    
-    <select id="getList" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.Criteria">
-        <![CDATA[
-	SELECT
-	      BRD_NO,
-	      BRD_WRITER,
-	      BRD_TITLE,
-	      BRD_CONTENT,
-	      BRD_REG_DT,
-	      BRD_HIT,
-	      BRD_RE_CNT,
-	      BRD_DEL_FLAG
-    FROM
-        (
-            select
-            	 @ROWNUM:=@ROWNUM+1 AS rowNum,
-            	 BRD_NO,
-            	 BRD_WRITER,
-            	 BRD_TITLE,
-            	 BRD_CONTENT,
-            	 BRD_REG_DT,
-            	 BRD_HIT,
-            	 BRD_RE_CNT,
-            	 BRD_DEL_FLAG
-            from
-            	BOARD
-            where
-            	(@ROWNUM:=0)=0 and @ROWNUM<= ${pageNum} * ${amount}
-        ) as b
-	WHERE b.rowNum> (${pageNum}-1) *${amount}
-
-	order by brd_no desc;
-        ]]>
-
-    </select>
-    
-    
-    	
-    	<!-- 검색 -->
-    <select id="searchBoardList"
+	
+    <!-- 제목검색 -->
+    <select id="searchBoardListByTitle"
 		resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="String">
 		/* board-mapper.xml(searchBoardList) */
 		
@@ -79,12 +42,28 @@
 			BRD_TITLE LIKE '%${searchKeyword}%' AND BRD_DEL_FLAG LIKE 'N'
 		ORDER BY BRD_NO DESC
 	</select> 
+	
+    <!-- 본문검색 -->
+    <select id="searchBoardListByContent"
+		resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="String">
+		/* board-mapper.xml(searchBoardList) */
+		
+		SELECT * FROM
+			board 
+		WHERE 
+			BRD_CONTENT LIKE '%${searchKeyword}%' AND BRD_DEL_FLAG LIKE 'N'
+		ORDER BY BRD_NO DESC
+	</select> 	
+    
+    
+    
+    
     
 	<!-- 글작성 -->
 	<insert id="uploadBoard"
 		parameterType="com.lguplus.medialog.project.board.BoardVO">
 		/* board-mapper.xml(uploadBoard) */
-       <selectKey resultType="int" keyProperty="brdNo" order="BEFORE">
+       <selectKey resultType="Integer" keyProperty="brdNo" order="BEFORE">
             SELECT IFNULL(MAX(BRD_NO),0)+1 FROM BOARD
        </selectKey>
 		
@@ -93,6 +72,10 @@
 			BRD_WRITER,
 			BRD_TITLE,
 			BRD_CONTENT,
+			BRD_PARENTS,
+			BRD_ORIGIN,
+			BRD_DEPTH,
+			BRD_ORDER,			
 			BRD_REG_DT,
 			BRD_MOD_DT,
 			BRD_HIT,
@@ -103,7 +86,12 @@
 			#{brdNo}, 
 			#{brdWriter}, 
 			#{brdTitle}, 
-			#{brdContent}, 
+			#{brdContent},
+                   <choose>
+                       <when test="brdParents==null">#{brdNo},#{brdNo}, 0,</when>
+                       <otherwise>#{brdParents},#{brdOrigin}, #{brdDepth},</otherwise>
+                   </choose>
+			#{brdOrder},		 
 			now(),
 			NULL, 
 			'0', 
@@ -111,7 +99,33 @@
 			'N'
 		    )
 	</insert>
-	
+	<update id="boardDepthUpdate" parameterType="com.lguplus.medialog.project.board.BoardVO">
+		UPDATE 
+			BOARD
+		SET
+			BRD_PARENTS=BRD_NO,
+			BRD_DEPTH=0,
+			BRD_ORDER=BRD_NO;
+	</update>
+	<select id="selectBoardParent" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="String">
+        SELECT BRD_DEPTH+1 BRD_DEPTH, BRD_ORDER
+          FROM BOARD
+         WHERE BRD_NO=#{brdParents}
+    </select>	
+    <update id="updateBoardOrder" parameterType="com.lguplus.medialog.project.board.BoardVO"> 
+        UPDATE BOARD
+           SET BRD_ORDER = BRD_ORDER + 1 
+         WHERE BRD_ORDER>#{brdOrder}       
+    </update> 	
+
+    
+    
+    
+    <select id="selectBoardMaxOrder" resultType="Integer" parameterType="Integer">
+        SELECT IFNULL(MAX(BRD_ORDER),0)+1
+          FROM BOARD
+    </select>
+
 	<!-- 파일업로드 -->
 	<insert id="uploadFile"
 		parameterType="com.lguplus.medialog.project.board.FileVO">
@@ -123,20 +137,22 @@
 			FILE_NAME,
 			FILE_REAL_NAME,
 			FILE_SIZE,
-			FILE_REG_DT
+			FILE_REG_DT,
+			FILE_DEL_FLAG
 			) 
 		VALUES (
 			#{fileBrdNo}, 
 			#{fileName}, 
 			#{fileRealName}, 
 			#{fileSize},
-			now() 
+			now(),
+			'N'
 		    )
 	</insert>
 
 	<!-- 상세 -->
 	<select id="getBoardDetail"
-		parameterType="int" resultType="com.lguplus.medialog.project.board.BoardVO">
+		parameterType="Integer" resultType="com.lguplus.medialog.project.board.BoardVO">
 		/* board-mapper.xml(getBoardDetail) */
 		SELECT
 			BRD_NO,
@@ -146,7 +162,8 @@
 			BRD_REG_DT,
 			BRD_MOD_DT, 
 			BRD_HIT, 
-			BRD_RE_CNT
+			BRD_RE_CNT,
+			BRD_ORIGIN
 		FROM
 			BOARD
 		WHERE
@@ -165,7 +182,7 @@
 	</update>
 
 	<!-- 삭제 -->
-	<update id="boardDelete" parameterType="int">
+	<update id="boardDelete" parameterType="String">
         UPDATE board
         	SET BRD_DEL_FLAG = 'Y'
         	WHERE BRD_NO = #{id}
@@ -354,12 +371,25 @@
          WHERE RE_NO=#{reNo}       
     </update>
     
-    <select id="selectBoard6FileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="int">
+    <select id="selectBoard6FileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
         SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
           FROM FILE
          WHERE FILE_BRD_NO=#{fileBrdNo}
          ORDER BY FILE_NO DESC 
     </select> 
-
+    
+        <select id="getFileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
+        SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
+          FROM FILE
+         WHERE FILE_BRD_NO=#{fileBrdNo} and FILE_DEL_FLAG = 'N'
+         ORDER BY FILE_NO DESC 
+    </select> 
+	<!-- 파일삭제 -->
+	<update id="deleteFile" parameterType="String">
+        
+        UPDATE file
+        	SET FILE_DEL_FLAG = 'Y'
+        WHERE FILE_NO = #{id}
+    </update>
 
 </mapper>

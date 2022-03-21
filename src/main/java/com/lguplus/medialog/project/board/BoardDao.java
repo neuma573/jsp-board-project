@@ -12,7 +12,9 @@ public interface BoardDao {
 	
 	public Integer selectBoardCount();
 	
-	List<BoardVO> searchBoardList(String keyword);
+	List<BoardVO> searchBoardListByTitle(String keyword);
+	
+	public List<BoardVO> searchBoardListByContent(String keyword);
 	
     public List<?> selectBoardList(PageVO param);
     
@@ -20,19 +22,25 @@ public interface BoardDao {
 	
 	void uploadBoard(BoardVO board);
 	
+	public BoardVO selectBoardParent(String brdParent);
+	
+	public Integer selectBoardMaxOrder(Integer s);
+	
+	public void updateBoardOrder(BoardVO board);
+	
 	void uploadFile(FileVO fileVO);
 	
-	BoardVO getBoardDetail(int id);
+	BoardVO getBoardDetail(Integer id);
 	
 	public void boardModifyRegist(BoardVO board);
 	
-	public void boardDelete(int id) throws Exception;
+	public void boardDelete(Integer id) throws Exception;
 	
-	public int boardViewUpdate(int id);
+	public int boardViewUpdate(Integer id);
 
 	void commentPost(ReplyVO comment);
 	
-	List<ReplyVO> openCommentList(int id);
+	List<ReplyVO> openCommentList(Integer id);
 	
 	public void addCommentCnt(String id);
 	
@@ -56,5 +64,9 @@ public interface BoardDao {
 	
 	public boolean deleteBoard6Reply(String param);
 	
-	public List<?> selectBoard6FileList(int id);
+	public List<?> selectBoard6FileList(Integer id);
+	
+	public FileVO getFileList(Integer id);
+	
+    public void deleteFile(String id);
 }

@@ -12,7 +12,7 @@ public class PageVO {
     private Integer page;                           // 현재 페이지
     private Integer pageStart;                      // 시작페이지
     private Integer pageEnd;                        // 종료페이지
-
+    private boolean hasNext, hasPrev;
     
     /**
      * 전체 데이터 개수(total)를 이용하여 페이지수 계산. 
@@ -34,6 +34,19 @@ public class PageVO {
 
 		rowStart = ((page - 1) * displayRowCount) + 1;
 		rowEnd = rowStart + displayRowCount - 1;
+		
+		if(pageStart==1) {
+			hasPrev=false;
+		}
+		else {
+			hasPrev=true;
+		}
+		if(pageEnd<totPage) {
+			hasNext=true;
+		}
+		else {
+			hasNext=false;
+		}
 	}
 
     /**

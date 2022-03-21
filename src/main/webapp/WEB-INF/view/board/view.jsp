@@ -75,10 +75,10 @@
                 <tr>
                     <td>첨부파일</td>
                     <td>
-                    <c:forEach var="listview" items="${listview}" varStatus="status">	
+	
                         <a href="/page/board/fileDownload?filename=<c:out value="${listview.fileName}"/>&downname=<c:out value="${listview.fileRealName }"/>"> 							 
                         <c:out value="${listview.fileRealName}"/></a> <c:out value="${listview.fileSize}"/> byte<br/>
-                    </c:forEach>
+
                 
                 
                 </td>
@@ -88,7 +88,7 @@
 
             </table>
             <button id="modify" onclick="location.href='boardModify?id=${board.brdNo}'">수정</button>
-            <button id="modify" onclick="location.href='boardModify?id=${board.brdNo}'">답글</button>
+            <button id="reply" onclick="location.href='boardReply?id=${board.brdNo}&origin=${board.brdOrigin}'">답글</button>
             <button id="delete" onclick="location.href='boardDelete?id=${board.brdNo}'">삭제</button>
 
             <a href="/page/board">돌아가기</button></a>

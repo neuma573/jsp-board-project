@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- include libraries(jQuery, bootstrap) -->
+<!-- include libraries(jQuery, bootstrap) -->
 <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css" rel="stylesheet">
 <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script> 
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script> 
@@ -29,31 +29,24 @@
     });
   </script>
 
-
 </head>
 <body>
   
-  <h1>게시판 글 수정하기</h1>
-  <form action="/page/board/boardModifyRegist" method="post"  enctype="multipart/form-data">
+  <h1>게시판 글 작성하기</h1>
+  <form action="/page/board/pageWrite" method="post" enctype="multipart/form-data">
+    <c:set var="plus" value="1" />
+    <input type="hidden" name="brdParents"  value="<c:out value=" ${id}" />">
+    <input type="hidden" name="brdOrigin"  value="<c:out value=" ${origin}" />">
+    <input type="hidden" name="brdDepth"  value="<c:out value=" ${depth+plus}" />">
     <div class="form-group">
       <table>
-        <tr>
-            <div><label>글번호</label>
-                <input name="brdNo" readonly="readonly" value="<c:out value="${board.brdNo}" />">
-           </div>
-           <div><label>작성자</label>
-                <input name="brdWriter" readonly="readonly" value="<c:out value="${board.brdWriter}"/>">
-           </div>
-           <c:out value="${board.brdNo}" />
-       
-            
-            <td>
+        <tr><td>
       <label for="title">제목</label></td>
     
       <td><input type="text" id="brdTitle"
-       placeholder="제목 입력(4-100)" name="brdTitle"
-       maxlength="100" required="required"
-       pattern=".{4,100}" value="${board.brdTitle}"></td>
+        placeholder="제목 입력(4-100)" name="brdTitle"
+        maxlength="100" required="required"
+        pattern=".{4,100}" value="RE: ${board.brdTitle}"></td>
       </tr>
     </div>
     <tr><td>
@@ -61,15 +54,13 @@
    <label for="content">내용</label></td>
 <td>
    <textarea rows="5" id="summernote"
-    name="brdContent" placeholder="내용 작성"  required="required">${board.brdContent}</textarea>
- </div></td>
+    name="brdContent" placeholder="내용 작성"  required="required">RE: ${board.brdContent}</textarea>
 
 
-</tr>
-<tr><td>첨부파일 이름 : </td><td>${file.fileRealName} <a href="/page/board/fileDelete?id=${file.fileNo}&bid=${board.brdNo}">삭제</a></td></tr>
+ </div></td></tr>
 </table>
- <input type="file" name="file" value="file" name="SelectFile" />
-<button type="submit">수정완료</button>
+ <input type="file" id="uploadFile" name="uploadFile"/>
+<button type="submit">등록</button>
 <a href="javascript:history.back()">돌아가기</button>
   </form>
 
