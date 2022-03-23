@@ -31,8 +31,3 @@ INSERT INTO `MENU` VALUES (7,'board','게시판','Y',1,4,'/page/board',1,'2021-0
 INSERT INTO `ROLE_MENU_MAP` VALUES ('ROLE_ADMIN','7');
 INSERT INTO `ROLE_MENU_MAP` VALUES ('ROLE_USER','7');
 
-INSERT INTO `BOARD` VALUES ('1','foo','테스트 글제목','<strong>테스트 글내용</strong> <i>이텔릭</i>','2022-03-17 15:54:58',NULL,'0','0', 'N');
-INSERT INTO `BOARD` VALUES ('2','foo','테스트 글제목','<strong>2345</strong> <i>asdd</i>','2022-03-17 16:54:58',NULL,'0','0', 'N');
-
-
-

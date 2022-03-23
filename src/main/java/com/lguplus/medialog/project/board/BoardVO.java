@@ -21,5 +21,6 @@ public class BoardVO {
 	private int brdReCnt;
 	private String keyword;
 	private MultipartFile uploadFile;
+	private boolean PagingByNew;
 
 }

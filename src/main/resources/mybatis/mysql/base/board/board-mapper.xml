@@ -8,6 +8,8 @@
 	<select id="selectBoardCount" resultType="Integer" >
         SELECT COUNT(*)
           FROM BOARD
+          WHERE 
+			BRD_DEL_FLAG LIKE 'N'
     </select>
 	
 	
@@ -28,6 +30,26 @@
 			BRD_DEL_FLAG LIKE 'N'
 		ORDER BY
 			BRD_ORIGIN DESC,BRD_ORDER ASC
+        LIMIT ${rowStart-1}, #{displayRowCount}
+    </select>
+    
+		<!-- 리스트 출력 최신순 -->
+	<select id="selectBoardListByNew" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.PageVO">
+		SELECT
+			BRD_NO,
+			BRD_WRITER,
+			BRD_TITLE,
+			BRD_REG_DT,
+			BRD_HIT,
+			BRD_RE_CNT,
+			BRD_DEL_FLAG,
+			BRD_DEPTH
+		FROM
+			BOARD
+		WHERE 
+			BRD_DEL_FLAG LIKE 'N'
+		ORDER BY
+			BRD_NO DESC
         LIMIT ${rowStart-1}, #{displayRowCount}
     </select>
 	
@@ -131,14 +153,15 @@
 		parameterType="com.lguplus.medialog.project.board.FileVO">
 		/* board-mapper.xml(uploadFile) */
 
-		
+		<![CDATA[
 		INSERT INTO FILE (
 			FILE_BRD_NO,
 			FILE_NAME,
 			FILE_REAL_NAME,
 			FILE_SIZE,
 			FILE_REG_DT,
-			FILE_DEL_FLAG
+			FILE_DEL_FLAG,
+			FILE_RANDOM_NO
 			) 
 		VALUES (
 			#{fileBrdNo}, 
@@ -146,9 +169,12 @@
 			#{fileRealName}, 
 			#{fileSize},
 			now(),
-			'N'
+			'N',
+			#{fileRandomNo}
 		    )
+		    				]]>
 	</insert>
+	
 
 	<!-- 상세 -->
 	<select id="getBoardDetail"
@@ -182,7 +208,7 @@
 	</update>
 
 	<!-- 삭제 -->
-	<update id="boardDelete" parameterType="String">
+	<update id="boardDelete" parameterType="Integer">
         UPDATE board
         	SET BRD_DEL_FLAG = 'Y'
         	WHERE BRD_NO = #{id}
@@ -372,17 +398,21 @@
     </update>
     
     <select id="selectBoard6FileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
+        <![CDATA[
         SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
           FROM FILE
          WHERE FILE_BRD_NO=#{fileBrdNo}
-         ORDER BY FILE_NO DESC 
+         ORDER BY FILE_NO DESC
+         ]]>
     </select> 
     
         <select id="getFileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
-        SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
+         <![CDATA[
+        SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE, FILE_RANDOM_NO
           FROM FILE
          WHERE FILE_BRD_NO=#{fileBrdNo} and FILE_DEL_FLAG = 'N'
          ORDER BY FILE_NO DESC 
+         ]]>
     </select> 
 	<!-- 파일삭제 -->
 	<update id="deleteFile" parameterType="String">
@@ -391,5 +421,34 @@
         	SET FILE_DEL_FLAG = 'Y'
         WHERE FILE_NO = #{id}
     </update>
+    
+	<update id="deleteFileByParents" parameterType="Integer">
+        
+        UPDATE file
+        	SET FILE_DEL_FLAG = 'Y'
+        WHERE FILE_BRD_NO = #{id}
+    </update>
+	<update id="commentDeleteByParents" parameterType="Integer">
+        
+        UPDATE comment
+        	SET RE_DEL_FLAG = 'Y'
+        WHERE RE_BRD_NO = #{id}
+    </update>
+
+
+	    <select id="selectBoardChild" resultType="Integer" parameterType="Integer">
+        SELECT COUNT(*)
+          FROM BOARD
+         WHERE BRD_PARENTS=#{brdParents} AND BRD_NO!=#{brdParents} AND BRD_DEL_FLAG='N'
+    </select>
+
+
+      <update id="updateBoardOrderDelete" parameterType="com.lguplus.medialog.project.board.BoardVO"> 
+        UPDATE BOARD BRD1
+         INNER JOIN BOARD BRD2 ON BRD2.BRD_NO=BRD1.BRD_NO AND BRD1.BRD_ORDER >BRD2.BRD_ORDER
+           SET BRD1.BRD_ORDER = BRD1.BRD_ORDER - 1 
+         WHERE BRD2.BRD_NO=#{brdNo} 
+    </update>
+
 
 </mapper>

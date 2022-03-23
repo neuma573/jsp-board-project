@@ -42,6 +42,9 @@ public class BoardService {
     public List<?> selectBoardList(PageVO param) throws Exception {
     	return dao.selectBoardList(param);
     }
+    public List<?> selectBoardListByNew(PageVO param) throws Exception {
+    	return dao.selectBoardListByNew(param);
+    }
     public String boardSearchList() {
     	return dao.boardSearchList();
     }
@@ -79,9 +82,17 @@ public class BoardService {
         
     }
     // 게시글 삭제
-    public void boardDelete(Integer id) throws Exception {
+    public boolean boardDelete(Integer id) {
+        Integer cnt = dao.selectBoardChild(id);
+        
+        if ( cnt > 0) {
+            return false;
+        }
+        
+        dao.updateBoardOrderDelete(id);
         dao.boardDelete(id);
-    }
+        return true;
+    } 
 	// 조회수 올리기
 	public int boardViewUpdate(Integer id) throws Exception {
 		return dao.boardViewUpdate(id);
@@ -150,6 +161,12 @@ public class BoardService {
     }
     public void deleteFile(String id) {
     	dao.deleteFile(id);
+    }
+    public void deleteFileByParents(Integer id) {
+    	dao.deleteFileByParents(id);
+    }
+    public void commentDeleteByParents(Integer id) {
+    	dao.commentDeleteByParents(id);
     }
 
 

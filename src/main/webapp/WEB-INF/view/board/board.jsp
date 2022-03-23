@@ -18,7 +18,10 @@
         placeholder="1~100" name="displayRowCount"
         input type='number' min='1' max='100' required="required">
             <button type="submit">게시글 표시</button>
-        </form>   
+        </form>
+        <form action="/page/board/setPagingMethod" method="post">
+              <button type="submit">최신순으로 표시 토글</button>
+        </form>
           <table border="2" width="770">
             <tr>
               <th width="60">번호</th>
@@ -31,7 +34,7 @@
             <c:forEach items="${list}" var="li">
               <tr align="center" height="30">
                 <td>${li.brdNo}</td>
-                <c:url value="/page/board/view" var="url">
+                <c:url value="/page/board/boardView" var="url">
                   <c:param name="id" value="${li.brdNo}" />
                   </c:url>
                 <td style="text-align: left;"> <a href="${url}"><c:set var="re" value="ㄴ" /><c:forEach var="i" begin="1" end="${li.brdDepth}" step="1"><c:out value="${re}"></c:out></c:forEach>${li.brdTitle}</a></td>
@@ -80,7 +83,7 @@
 
         <a href="/page/board/page">글쓰기</a>
         <!-- <a href="/page/board/api">API 호출</a> -->
-        <form action="/page/board/result" method="post">
+        <form action="/page/board/searchResult" method="post">
           <div>
             <select name="type" id="type" required="required">
               <option value="title">제목으로 검색</option>

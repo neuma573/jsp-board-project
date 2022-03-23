@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.lguplus.medialog.project.common.utils.DownloadUtils;
 import com.lguplus.medialog.project.common.utils.SpringUtils;
 
 
@@ -43,99 +45,47 @@ public class BoardController {
 	private BoardService svc;
 	private File file;
 	HttpSession session;
+	boolean PagingByNew = false;
+	Integer currPage;
+	Integer displayRowCount = 10;
 	
 	//페이지에 표시할 게시글 수 세션에 넣기
-	@RequestMapping(value="/setPageCnt", method = {RequestMethod.POST})
-	public String setPageCnt(HttpSession session, @RequestParam(value = "displayRowCount") Integer displayRowCount) {
-		session.setAttribute("displayRowCount", displayRowCount);
+	@RequestMapping(value="/setPageCnt")
+	public String setPageCnt(@RequestParam(value = "displayRowCount") Integer displayRowCount) {
+		this.displayRowCount =  displayRowCount;
+		logger.info("게시글 표시 갯수 ::"+displayRowCount);
+		
+		return "redirect:/page/board";
+	}
+	
+	//페이징 방식 결정
+	@RequestMapping(value="/setPagingMethod")
+	public String setPaging() {
+		PagingByNew = !PagingByNew;
+		logger.info("최신순으로 표시 ::"+PagingByNew);
+		
 		return "redirect:/page/board";
 	}
 	
 	//게시판 리스트 출력
 	@GetMapping("")
-	public String boardList(HttpSession session, PageVO pageVO, Model model) throws Exception {
-		
-		
-		if(session.getAttribute("displayRowCount")!=null) {
-		int temp = Integer.parseInt(session.getAttribute("displayRowCount").toString());
-		pageVO.setDisplayRowCount((Integer)temp);
+	public String boardList(PageVO pageVO, Model model) throws Exception{
+		pageVO.setDisplayRowCount(displayRowCount);
+		pageVO.pageCalculate(svc.selectBoardCount());
+		List<?> listview;
+		if (PagingByNew) {
+			listview = svc.selectBoardListByNew(pageVO);
+		} else {
+			listview = svc.selectBoardList(pageVO);
 		}
-		pageVO.pageCalculate(svc.selectBoardCount() );
-		
-		List<?> listview = svc.selectBoardList(pageVO);
-		
 		model.addAttribute("list", listview);
 		model.addAttribute("pageVO", pageVO);
-		
+
 		return "board/board.empty";
 	}
 	
-
-	//검색결과 출력
-	@PostMapping("result")
-	public String boardSearchList(@RequestParam(value = "type") String type, @RequestParam(value = "searchKeyword") String searchKeyword, ModelMap modelMap) throws Exception {
-		if(type.equals("title")) {
-			List<BoardVO> listview = svc.searchBoardListByTitle(searchKeyword);
-			modelMap.addAttribute("list", listview);
-		}
-		else {
-			List<BoardVO> listview = svc.searchBoardListByContent(searchKeyword);
-			modelMap.addAttribute("list", listview);
-		}
-		
-		
-        
-        return "board/result.empty";
-}	
-	//다운로드
-    @RequestMapping(value = "/fileDownload")
-    public void fileDownload(HttpServletRequest request,HttpServletResponse response) {
-        String path = "D:\\"; 
-        
-        String filename = request.getParameter("filename");
-        String downname = request.getParameter("downname");
-        String realPath = "";
-        
-        if (filename == null || "".equals(filename)) {
-            filename = downname;
-        }
-        
-        try {
-            filename = URLEncoder.encode(filename, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            System.out.println("UnsupportedEncodingException");
-        }
-        
-        realPath = path + filename;
-        System.out.println(realPath);
-        File file1 = new File(realPath);
-        if (!file1.exists()) {
-            return ;
-        }
-        
-        // 파일명 지정
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + downname + "\"");
-        try {
-            OutputStream os = response.getOutputStream();
-            FileInputStream fis = new FileInputStream(realPath);
-
-            int ncount = 0;
-            byte[] bytes = new byte[512];
-
-            while ((ncount = fis.read(bytes)) != -1 ) {
-                os.write(bytes, 0, ncount);
-            }
-            fis.close();
-            os.close();
-        } catch (FileNotFoundException ex) {
-            System.out.println("FileNotFoundException");
-        } catch (IOException ex) {
-            System.out.println("IOException");
-        }
-    }
-	
     //게시판 게시글 디테일
-	@GetMapping("view")
+	@GetMapping("boardView")
 	public String openBoardDetail(@RequestParam Integer id, Model model) throws Exception {
 		List<ReplyVO> list = svc.openCommentList(id);
 		FileVO listview = svc.getFileList(id);
@@ -147,6 +97,86 @@ public class BoardController {
 		
 		return "board/view.empty";
 	}
+	
+
+	//검색결과 출력
+	@PostMapping("searchResult")
+	public String boardSearchList(@RequestParam(value = "type") String type, @RequestParam(value = "searchKeyword") String searchKeyword, Model model){
+		if(type.equals("title")) {
+			List<BoardVO> listview = svc.searchBoardListByTitle(searchKeyword);
+			logger.info("제목으로 검색, 키워드 ::"+searchKeyword);
+			model.addAttribute("list", listview);
+		}
+		else {
+			List<BoardVO> listview = svc.searchBoardListByContent(searchKeyword);
+			logger.info("내용으로 검색, 키워드 ::"+searchKeyword);
+			model.addAttribute("list", listview);
+		}
+
+        return "board/result.empty";
+}
+	
+	//게시판 글쓰기
+	@RequestMapping(value="/pageWrite", method = RequestMethod.POST)
+	public String uploadBoard(BoardVO board, @RequestParam("uploadFile") MultipartFile uploadFile, FileVO fileVO) throws Exception {
+
+		board.setBrdWriter(SpringUtils.getCurrentUser().getUserId());
+		svc.uploadBoard(board);
+		if(!uploadFile.isEmpty()) {
+			logger.info("파일업로드 로그 : "+uploadFile);
+			logger.info(uploadFile.getName());
+			logger.info(Long.toString(uploadFile.getSize()));
+			logger.info("파일명 : "+uploadFile.getOriginalFilename());
+			uploadFile(fileVO, uploadFile, board);
+		}
+		return "redirect:/page/board";
+	}	
+	
+	//파일업로드
+	public void uploadFile(FileVO fileVO, MultipartFile uploadFile, BoardVO board) throws IOException{
+        String originalFileExtension = uploadFile.getOriginalFilename().substring(uploadFile.getOriginalFilename().lastIndexOf("."));
+        String storedFileName =SpringUtils.getCurrentUserName() + System.currentTimeMillis() + originalFileExtension;
+        String filePath = "D://";
+        file = new File(filePath+storedFileName);
+		DownloadUtils.upload(uploadFile, file);
+        //파일 저장완료
+        SecureRandom num = new SecureRandom();
+        fileVO.setFileRandomNo(num.nextLong());
+        fileVO.setFileBrdNo(board.getBrdNo());
+        fileVO.setFileRealName(uploadFile.getOriginalFilename());
+        fileVO.setFileSize(uploadFile.getSize());
+        fileVO.setFileName(storedFileName);
+        svc.uploadFile(fileVO);
+	}	
+
+	//다운로드
+	@RequestMapping(value="/fileDownload")
+    public void fileDownload(@RequestParam long fileRandomNo, @RequestParam Integer brdNo, HttpServletRequest request,HttpServletResponse response) throws IOException {
+        logger.info("다운로드할 게시글 번호 : "+ brdNo);
+    	
+    	String path = "D:\\"; 
+    	FileVO fileVO = svc.getFileList(brdNo);
+        
+    	if(fileVO.getFileRandomNo()!=fileRandomNo) {
+            logger.info(fileRandomNo+" :난수 검증 실패");    		
+    		return ;
+    	}
+        logger.info("난수 검증 성공 : "+ fileRandomNo);
+        
+        String filename = fileVO.getFileName();
+        
+        String realPath = path + filename;
+        logger.info("파일 다운 경로 "+ realPath);
+
+        file = new File(realPath);
+        
+        // 파일명 지정
+        DownloadUtils.setDownloadHeader(fileVO.getFileRealName(), request, response);
+        DownloadUtils.download(file, request, response);
+
+    }
+	
+
 
 
 	//게시판 글작성 폼 호출
@@ -155,21 +185,8 @@ public class BoardController {
 		return "board/somePage.empty";
 	}
 
-	//게시판 글쓰기
-	@RequestMapping(value="/pageWrite", method = RequestMethod.POST)
-	public String uploadBoard(BoardVO board, @RequestParam("uploadFile") MultipartFile file, FileVO fileVO) throws Exception {
 
-		board.setBrdWriter(SpringUtils.getCurrentUser().getUserId());
-		svc.uploadBoard(board);
-		if(!file.isEmpty()) {
-			logger.info("파일업로드 로그"+file);
-			logger.info(file.getName());
-			logger.info(null, file.getSize());
-			System.out.println(file.getOriginalFilename());
-			uploadFile(fileVO, file, board);
-		}
-		return "redirect:/page/board";
-	}
+	
 	//게시판 답글작성 폼 호출
 	@RequestMapping("/boardReply")
 	public String board(@RequestParam("id") Integer id, @RequestParam("origin") Integer origin, Model model) {
@@ -183,28 +200,7 @@ public class BoardController {
 		return "board/boardReply.empty";
 	}
 	
-	//파일업로드
-	public void uploadFile(FileVO fileVO, MultipartFile uploadFile, BoardVO board) throws IOException{
-		//파일명
-        String originalFile = uploadFile.getOriginalFilename();
-        //파일명 중 확장자만 추출                                                //lastIndexOf(".") - 뒤에 있는 . 의 index번호
-        String originalFileExtension = originalFile.substring(originalFile.lastIndexOf("."));
-        //fileuploadtest.doc
-        //lastIndexOf(".") = 14(index는 0번부터)
-        //substring(14) = .doc
-        
 
-        String storedFileName = originalFile+System.currentTimeMillis() + originalFileExtension;
-        String filePath = "D://";
-        file = new File(filePath + storedFileName);
-        //파일 저장
-        uploadFile.transferTo(file);
-        fileVO.setFileBrdNo(board.getBrdNo());
-        fileVO.setFileRealName(originalFile);
-        fileVO.setFileSize(uploadFile.getSize());
-        fileVO.setFileName(storedFileName);
-        svc.uploadFile(fileVO);
-	}
 	//파일삭제
 	@RequestMapping(value="fileDelete")
 	public String deleteFile(@RequestParam("id") String id,@RequestParam("bid") Integer bid) throws IOException{
@@ -244,8 +240,11 @@ public class BoardController {
     //게시판 글삭제
     @RequestMapping(value="/boardDelete")
     public String boardDelete(@RequestParam("id") Integer id) throws Exception {
-        
-        svc.boardDelete(id);
+        if (!svc.boardDelete(id)) {
+            return "board/BoardFailure";
+        }
+		svc.deleteFileByParents(id);
+        svc.commentDeleteByParents(id);
         return "redirect:/page/board";
     }
     
@@ -256,7 +255,7 @@ public class BoardController {
         svc.insertBoardReply(boardReplyInfo);
         svc.addCommentCnt(boardReplyInfo.getReBrdNo());
 
-        return "redirect:/page/board/view?id=" + boardReplyInfo.getReBrdNo();
+        return "redirect:/page/board/boardView?id=" + boardReplyInfo.getReBrdNo();
     }
     
     
@@ -268,7 +267,7 @@ public class BoardController {
             return "board/BoardFailure";
         }
         svc.subCommentCnt(bid);
-        return "redirect:/page/board/view?id=" + bid;
+        return "redirect:/page/board/boardView?id=" + bid;
     }
     
     

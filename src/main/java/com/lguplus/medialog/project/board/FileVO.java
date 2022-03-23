@@ -10,6 +10,7 @@ public class FileVO {
 	private String fileName;
 	private String fileRealName;
 	private long fileSize;
-	private String fileRegDt; 
+	private String fileRegDt;
+	private long fileRandomNo;
 
 }

@@ -75,9 +75,18 @@
                 <tr>
                     <td>첨부파일</td>
                     <td>
-	
-                        <a href="/page/board/fileDownload?filename=<c:out value="${listview.fileName}"/>&downname=<c:out value="${listview.fileRealName }"/>"> 							 
-                        <c:out value="${listview.fileRealName}"/></a> <c:out value="${listview.fileSize}"/> byte<br/>
+                        <c:if test="${listview.fileRandomNo ne ''}">
+                        <form action ="/page/board/fileDownload" method="post">
+                            파일이름: <c:out value="${listview.fileRealName}"/>  크기:<c:out value="${listview.fileSize}"/> byte
+                            <input name="fileRandomNo" type="hidden" value="${listview.fileRandomNo}" >
+                            <input name="brdNo" type="hidden" value="${board.brdNo}" >
+                            <input type="submit" value="버튼"  >
+                        </form>
+
+
+
+                        </c:if>						 
+<br/>
 
                 
                 
