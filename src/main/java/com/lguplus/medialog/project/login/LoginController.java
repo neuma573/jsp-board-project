@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lguplus.medialog.project.base.auth.AuthPostProcessor;
 //import com.lguplus.medialog.project.base.auth.extra.CustomAuthenticationToken;
 import com.lguplus.medialog.project.base.user.User;
+import com.lguplus.medialog.project.board.BoardController;
 import com.lguplus.medialog.project.common.dto.RestResult;
 import com.lguplus.medialog.project.config.consts.Const;
 import com.lguplus.medialog.project.config.consts.ResultCode;
@@ -95,7 +96,7 @@ public class LoginController {
 	@GetMapping("/api/auth/logout")
 	public RestResult<?> logout(HttpServletRequest request, HttpServletResponse response) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		if (auth != null){    
+		if (auth != null){
 			new SecurityContextLogoutHandler().logout(request, response, auth);
 		}
 		

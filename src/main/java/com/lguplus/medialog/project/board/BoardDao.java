@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface BoardDao {
 	public List<BoardVO> getList(Criteria criteria);
 	
-	public Integer selectBoardCount();
+	public Integer selectBoardCount(PageVO pageVO);
 	
 	List<BoardVO> searchBoardListByTitle(String keyword);
 	

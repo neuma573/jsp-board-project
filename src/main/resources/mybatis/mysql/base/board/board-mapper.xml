@@ -5,15 +5,17 @@
 
 	<!-- 리스트 출력 -->
 		<!-- 글 갯수 -->	
-	<select id="selectBoardCount" resultType="Integer" >
-        SELECT COUNT(*)
-          FROM BOARD
-          WHERE 
-			BRD_DEL_FLAG LIKE 'N'
+	<select id="selectBoardCount" resultType="Integer" parameterType="com.lguplus.medialog.project.board.PageVO">
+        SELECT
+        	COUNT(*)
+        FROM
+        	BOARD
+        WHERE
+			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
     </select>
 	
 	
-		<!-- 리스트 출력 -->
+	<!-- 리스트 출력 -->
 	<select id="selectBoardList" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.PageVO">
 		SELECT
 			BRD_NO,
@@ -27,13 +29,13 @@
 		FROM
 			BOARD
 		WHERE 
-			BRD_DEL_FLAG LIKE 'N'
+			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
 		ORDER BY
 			BRD_ORIGIN DESC,BRD_ORDER ASC
         LIMIT ${rowStart-1}, #{displayRowCount}
     </select>
     
-		<!-- 리스트 출력 최신순 -->
+	<!-- 리스트 출력 최신순 -->
 	<select id="selectBoardListByNew" resultType="com.lguplus.medialog.project.board.BoardVO" parameterType="com.lguplus.medialog.project.board.PageVO">
 		SELECT
 			BRD_NO,
@@ -47,11 +49,13 @@
 		FROM
 			BOARD
 		WHERE 
-			BRD_DEL_FLAG LIKE 'N'
+			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
 		ORDER BY
 			BRD_NO DESC
         LIMIT ${rowStart-1}, #{displayRowCount}
     </select>
+	
+	
 	
     <!-- 제목검색 -->
     <select id="searchBoardListByTitle"
@@ -204,7 +208,7 @@
 			SET BRD_TITLE = #{brdTitle},
 				BRD_CONTENT  = #{brdContent},
 				BRD_MOD_DT = now() 
-			WHERE BRD_NO = #{brdNo};		
+			WHERE BRD_NO = #{brdNo};
 	</update>
 
 	<!-- 삭제 -->

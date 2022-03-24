@@ -22,5 +22,4 @@ public class BoardVO {
 	private String keyword;
 	private MultipartFile uploadFile;
 	private boolean PagingByNew;
-
 }

@@ -13,7 +13,9 @@ public class PageVO {
     private Integer pageStart;                      // 시작페이지
     private Integer pageEnd;                        // 종료페이지
     private boolean hasNext, hasPrev;
-    
+	private boolean selectOrigin;
+	private boolean selectRe;
+	private boolean pagingByNew;
     /**
      * 전체 데이터 개수(total)를 이용하여 페이지수 계산. 
      */
@@ -59,20 +61,7 @@ public class PageVO {
 
 		return page;
 	}
-//	private int pageCount;
-//	private int startPage;
-//	private int endPage;
-//	private int realEnd;
-//	private boolean prev, next;
-//	private int total;
-//	private Criteria criteria;
-//	
-//	public PageVO() {
-//		;
-//	}
-//	
 
-//	
 	
 }
 

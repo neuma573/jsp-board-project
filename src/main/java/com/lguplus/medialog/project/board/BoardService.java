@@ -28,8 +28,8 @@ public class BoardService {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	long start = System.currentTimeMillis();
 
-    public Integer selectBoardCount() throws Exception {
-		return dao.selectBoardCount();
+    public Integer selectBoardCount(PageVO pageVO) throws Exception {
+		return dao.selectBoardCount(pageVO);
     }
     
 	public List<BoardVO> searchBoardListByTitle(String keyword)  {
@@ -94,7 +94,7 @@ public class BoardService {
         return true;
     } 
 	// 조회수 올리기
-	public int boardViewUpdate(Integer id) throws Exception {
+	public int boardViewUpdate(Integer id){
 		return dao.boardViewUpdate(id);
 	}
 	

@@ -66,3 +66,7 @@ app.settings:
     tlo-prefix: ${spring.application.name}
   sms-authnum-msg: "[인증번호:%s] 사용자본인 인증번호를 입력해주세요"
   sms-callback: 15445992
+
+---
+app.brdcont:
+  view-cnt-by-cookie: false # True: 조회수 쿠키당 하나 증가   false: 조회수 무제한 증가 #

@@ -11,17 +11,38 @@
 
       <body>
 
-        <h1>게시판 메인</h1>
-
+        <h1>게시판 메인 : 접속유저 : ${User}</h1>
+        <table  width="770">
+          <tr>
+          <th>
         <form action="/page/board/setPageCnt" method="post">
         <input id="displayRowCount"
         placeholder="1~100" name="displayRowCount"
         input type='number' min='1' max='100' required="required">
             <button type="submit">게시글 표시</button>
-        </form>
+        </form></th>
+        <th>
         <form action="/page/board/setPagingMethod" method="post">
               <button type="submit">최신순으로 표시 토글</button>
         </form>
+        </th>
+        <th>
+            <form action="/page/board/selectOrigin" method="post">
+                  <button type="submit">최상위 부모 게시글 그룹만 표시 토글</button>
+            </form>
+        </th>
+        <th>
+          <form action="/page/board/selectRe" method="post">
+                <button type="submit">댓글 그룹만 표시 토글</button>
+          </form>
+      </th></tr>
+    <tr>
+      <td>게시물 ${pageVO.displayRowCount} 개 표시</td>
+      <td>${pageVO.pagingByNew}</td>
+      <td>${pageVO.selectOrigin}</td>
+      <td>${pageVO.selectRe}</td>
+  </tr>
+</table>
           <table border="2" width="770">
             <tr>
               <th width="60">번호</th>
@@ -31,13 +52,15 @@
               <th width="60">조회수</th>
               <th width="60">댓글수</th>
             </tr>
-            <c:forEach items="${list}" var="li">
+            <c:forEach items="${list}" var="li" varStatus="status">
               <tr align="center" height="30">
-                <td>${li.brdNo}</td>
+                <td>
+                  ${pageVO.displayRowCount*(pageVO.page-1)+status.count}
+                </td>
                 <c:url value="/page/board/boardView" var="url">
                   <c:param name="id" value="${li.brdNo}" />
                   </c:url>
-                <td style="text-align: left;"> <a href="${url}"><c:set var="re" value="ㄴ" /><c:forEach var="i" begin="1" end="${li.brdDepth}" step="1"><c:out value="${re}"></c:out></c:forEach>${li.brdTitle}</a></td>
+                <td style="text-align: left;"> <a href="${url}"><c:set var="re" value="└─" /><c:forEach var="i" begin="1" end="${li.brdDepth}" step="1"><c:out value="${re}"></c:out></c:forEach>${li.brdTitle}</a></td>
                 <td>${li.brdWriter}</td>
                 <td>${li.brdRegDt}</td>
                 <td>${li.brdHit}</td>
@@ -81,7 +104,7 @@
 
 
 
-        <a href="/page/board/page">글쓰기</a>
+        <a href="/page/board/boardWrite">글쓰기</a>
         <!-- <a href="/page/board/api">API 호출</a> -->
         <form action="/page/board/searchResult" method="post">
           <div>
