@@ -42,6 +42,9 @@
 
 
 
+
+
+
   <form action="/page/board/boardWriteRegist" name="write" method="post" enctype="multipart/form-data">
     <c:if test="${action eq 'reply'}" >
     <c:set var="plus" value="1" />
@@ -75,7 +78,7 @@
       <td><input type="text" id="brdTitle"
        placeholder="제목 입력(1-100)" name="brdTitle"
        maxlength="100" required="required"
-       pattern=".{1,100}" value="${board.brdTitle}"></td>
+       pattern=".{1,100}" value="<c:if test="${action eq 'reply'}" >RE:</c:if>${board.brdTitle}"></td>
       </tr>
     </div>
     <tr><td>
@@ -83,7 +86,7 @@
    <label for="content">내용</label></td>
 <td>
    <textarea rows="5" id="summernote"
-    name="brdContent" placeholder="내용 작성"  required="required">${board.brdContent}</textarea>
+    name="brdContent" placeholder="내용 작성" required="required"><c:if test="${action eq 'reply'}" >RE:</c:if>${board.brdContent}</textarea>
 
 
  </div></td></tr>

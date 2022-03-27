@@ -11,7 +11,7 @@
         FROM
         	BOARD
         WHERE
-			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
+			BRD_DEL_FLAG LIKE 'N'
     </select>
 	
 	
@@ -29,7 +29,7 @@
 		FROM
 			BOARD
 		WHERE 
-			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
+			BRD_DEL_FLAG LIKE 'N'
 		ORDER BY
 			BRD_ORIGIN DESC,BRD_ORDER ASC
         LIMIT ${rowStart-1}, #{displayRowCount}
@@ -49,7 +49,7 @@
 		FROM
 			BOARD
 		WHERE 
-			BRD_DEL_FLAG LIKE 'N' and IF(${selectOrigin}, BRD_DEPTH = '0', BRD_DEPTH != '0') or IF(${selectRe}, BRD_DEPTH != '0', BRD_DEPTH = '0')
+			BRD_DEL_FLAG LIKE 'N'
 		ORDER BY
 			BRD_NO DESC
         LIMIT ${rowStart-1}, #{displayRowCount}
@@ -82,7 +82,27 @@
 	</select> 	
     
     
+     <select id="searchBoardListByOrigin"
+		resultType="com.lguplus.medialog.project.board.BoardVO">
+		/* board-mapper.xml(searchBoardList) */
+		
+		SELECT * FROM
+			board 
+		WHERE 
+			BRD_DEPTH = '0' AND BRD_DEL_FLAG LIKE 'N'
+		ORDER BY BRD_NO DESC
+	</select>    
     
+     <select id="searchBoardListByChild"
+		resultType="com.lguplus.medialog.project.board.BoardVO">
+		/* board-mapper.xml(searchBoardList) */
+		
+		SELECT * FROM
+			board 
+		WHERE 
+			BRD_DEPTH =! '0' AND BRD_DEL_FLAG LIKE 'N'
+		ORDER BY BRD_NO DESC
+	</select>    
     
     
 	<!-- 글작성 -->
@@ -348,7 +368,7 @@
 	</select>
 
     
-    <insert id="insertBoard6Reply" parameterType="com.lguplus.medialog.project.board.ReplyVO" >
+    <insert id="insertBoardReply" parameterType="com.lguplus.medialog.project.board.ReplyVO" >
         <selectKey resultType="String" keyProperty="reNo" order="BEFORE">
             SELECT IFNULL(MAX(RE_NO),0)+1 FROM COMMENT
         </selectKey>
@@ -362,19 +382,19 @@
                )
     </insert>      
     
-    <select id="selectBoard6ReplyParent" resultType="com.lguplus.medialog.project.board.ReplyVO" parameterType="String">
+    <select id="selectBoardReplyParent" resultType="com.lguplus.medialog.project.board.ReplyVO" parameterType="String">
         SELECT RE_BRD_NO, RE_DEPTH+1 RE_DEPTH, RE_ORDER
           FROM COMMENT
          WHERE RE_NO=#{reParents}
     </select>
     
-    <update id="updateBoard6ReplyOrder" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
+    <update id="updateBoardReplyOrder" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
         UPDATE COMMENT
            SET RE_ORDER = RE_ORDER + 1 
          WHERE RE_BRD_NO=#{reBrdNo} AND RE_ORDER>#{reOrder}       
     </update> 
     
-    <select id="selectBoard6ReplyMaxOrder" resultType="Integer" parameterType="String">
+    <select id="selectBoardReplyMaxOrder" resultType="Integer" parameterType="String">
         SELECT IFNULL(MAX(RE_ORDER),0)+1
           FROM COMMENT
          WHERE RE_BRD_NO=#{reBrdNo}
@@ -382,26 +402,26 @@
     
     
 <!-- 자식 카운트 -->    
-    <select id="selectBoard6ReplyChild" resultType="Integer" parameterType="String">
+    <select id="selectBoardReplyChild" resultType="Integer" parameterType="String">
         SELECT COUNT(*)
           FROM COMMENT
          WHERE RE_PARENTS=#{reParents} AND RE_NO!=#{reParents} AND RE_DEL_FLAG='N'
     </select>
 
 
-    <update id="updateBoard6ReplyOrder4Delete" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
+    <update id="updateBoardReplyOrder4Delete" parameterType="com.lguplus.medialog.project.board.ReplyVO"> 
         UPDATE COMMENT COM1
          INNER JOIN COMMENT COM2 ON COM2.RE_BRD_NO=COM1.RE_BRD_NO AND COM1.RE_ORDER >COM2.RE_ORDER
            SET COM1.RE_ORDER = COM1.RE_ORDER - 1 
          WHERE COM2.RE_NO=#{reNo} 
     </update>
-    <update id="deleteBoard6Reply" parameterType="String"> 
+    <update id="deleteBoardReply" parameterType="String"> 
         UPDATE COMMENT
            SET RE_DEL_FLAG='Y' 
          WHERE RE_NO=#{reNo}       
     </update>
     
-    <select id="selectBoard6FileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
+    <select id="selectBoardFileList" resultType="com.lguplus.medialog.project.board.FileVO" parameterType="Integer">
         <![CDATA[
         SELECT FILE_NO, FILE_NAME, FILE_REAL_NAME, FILE_SIZE
           FROM FILE

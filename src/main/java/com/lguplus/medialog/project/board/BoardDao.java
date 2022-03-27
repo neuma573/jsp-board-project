@@ -2,8 +2,6 @@ package com.lguplus.medialog.project.board;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.springframework.web.multipart.MultipartFile;
 
 // 매퍼 클래스
 @Mapper
@@ -15,6 +13,11 @@ public interface BoardDao {
 	List<BoardVO> searchBoardListByTitle(String keyword);
 	
 	public List<BoardVO> searchBoardListByContent(String keyword);
+	
+	public List<BoardVO> searchBoardListByOrigin();
+	
+	public List<BoardVO> searchBoardListByChild();
+	
 	
     public List<?> selectBoardList(PageVO param);
     
@@ -53,25 +56,25 @@ public interface BoardDao {
 	
 	public void commentDelete(String id);
 	
-	public Integer selectBoard6ReplyMaxOrder(String s);
+	public Integer selectBoardReplyMaxOrder(String s);
 	
-	public void insertBoard6Reply(ReplyVO param);
+	public void insertBoardReply(ReplyVO param);
 	
-	public void updateBoard6Reply(ReplyVO param);
+	public void updateBoardReply(ReplyVO param);
 	
-	public ReplyVO selectBoard6ReplyParent(String commentParent);
+	public ReplyVO selectBoardReplyParent(String commentParent);
 
-	public void updateBoard6ReplyOrder(ReplyVO comment);
+	public void updateBoardReplyOrder(ReplyVO comment);
 	
-	public Integer selectBoard6ReplyChild(String param);
+	public Integer selectBoardReplyChild(String param);
 	
 	public Integer selectBoardChild(Integer id);
 	
-	public void updateBoard6ReplyOrder4Delete(String param);
+	public void updateBoardReplyOrder4Delete(String param);
 	
-	public boolean deleteBoard6Reply(String param);
+	public boolean deleteBoardReply(String param);
 	
-	public List<?> selectBoard6FileList(Integer id);
+	public List<?> selectBoardFileList(Integer id);
 	
 	public FileVO getFileList(Integer id);
 	

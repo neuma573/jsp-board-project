@@ -27,20 +27,29 @@
         </form>
         </th>
         <th>
-            <form action="/page/board/selectOrigin" method="post">
-                  <button type="submit">최상위 부모 게시글 그룹만 표시 토글</button>
-            </form>
+          <form action="/page/board/searchResult" method="post">
+            <div>
+              <input type="hidden" name="searchKeyword" value="1">
+              <input type="hidden" name="type" value="selectChild">
+
+                <button type="submit">자식만 검색</button>
+            </div>
+          </form>   
         </th>
         <th>
-          <form action="/page/board/selectRe" method="post">
-                <button type="submit">댓글 그룹만 표시 토글</button>
-          </form>
+          <form action="/page/board/searchResult" method="post">
+            <div>
+              <input type="hidden" name="searchKeyword" value="1">
+              <input type="hidden" name="type" value="selectOrigin">             
+                <button type="submit">부모만 검색</button>
+            </div>
+          </form>   
       </th></tr>
     <tr>
       <td>게시물 ${pageVO.displayRowCount} 개 표시</td>
-      <td>${pageVO.pagingByNew}</td>
-      <td>${pageVO.selectOrigin}</td>
-      <td>${pageVO.selectRe}</td>
+      <td></td>
+      <td></td>
+      <td></td>
   </tr>
 </table>
           <table border="2" width="770">

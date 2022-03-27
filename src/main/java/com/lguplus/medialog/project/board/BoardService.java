@@ -1,21 +1,13 @@
 package com.lguplus.medialog.project.board;
 
 import java.util.List;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
-import org.apache.ibatis.session.SqlSession;
-import org.mybatis.spring.SqlSessionTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,8 +17,6 @@ public class BoardService {
 	@Autowired
 	private BoardDao dao;
 	
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-	long start = System.currentTimeMillis();
 
     public Integer selectBoardCount(PageVO pageVO) throws Exception {
 		return dao.selectBoardCount(pageVO);
@@ -38,7 +28,12 @@ public class BoardService {
 	public List<BoardVO> searchBoardListByContent(String keyword)  {
 		return dao.searchBoardListByContent(keyword);
 	}
-	
+	public List<BoardVO> searchBoardListByOrigin()  {
+		return dao.searchBoardListByOrigin();
+	}
+	public List<BoardVO> searchBoardListByChild()  {
+		return dao.searchBoardListByChild();
+	}
     public List<?> selectBoardList(PageVO param) throws Exception {
     	return dao.selectBoardList(param);
     }
@@ -101,18 +96,18 @@ public class BoardService {
 	 public void insertBoardReply(ReplyVO param) {
 	        if (param.getReNo() == null || "".equals(param.getReNo())) {
 	            if (param.getReParents() != null) {
-	            	ReplyVO replyInfo = dao.selectBoard6ReplyParent(param.getReParents());
+	            	ReplyVO replyInfo = dao.selectBoardReplyParent(param.getReParents());
 	                param.setReDepth(replyInfo.getReDepth());
 	                param.setReOrder(replyInfo.getReOrder() + 1);
-	                dao.updateBoard6ReplyOrder(replyInfo);
+	                dao.updateBoardReplyOrder(replyInfo);
 	            } else {
 	            	
-	                Integer reorder = dao.selectBoard6ReplyMaxOrder(param.getReBrdNo());
+	                Integer reorder = dao.selectBoardReplyMaxOrder(param.getReBrdNo());
 	                param.setReOrder(reorder);
 	            }
-	            dao.insertBoard6Reply(param);
+	            dao.insertBoardReply(param);
 	        } else {
-	        	dao.updateBoard6Reply(param);
+	        	dao.updateBoardReply(param);
 	        }
 	    }   
 
@@ -127,7 +122,7 @@ public class BoardService {
 		dao.subCommentCnt(id);
 	}
 	public void commentDelete(String id) {
-		Integer cnt = dao.selectBoard6ReplyChild(id);
+		Integer cnt = dao.selectBoardReplyChild(id);
 		
         if ( cnt > 0) {
             return ;
@@ -141,20 +136,20 @@ public class BoardService {
      * 댓글 삭제.
      * 자식 댓글이 있으면 삭제 안됨. 
      */
-    public boolean deleteBoard6Reply(String param) {
-        Integer cnt = dao.selectBoard6ReplyChild(param);
+    public boolean deleteBoardReply(String param) {
+        Integer cnt = dao.selectBoardReplyChild(param);
         
         if ( cnt > 0) {
             return false;
         }
         
-        dao.updateBoard6ReplyOrder4Delete(param);
-        dao.deleteBoard6Reply(param);
+        dao.updateBoardReplyOrder4Delete(param);
+        dao.deleteBoardReply(param);
         return true;
     } 
 
-    public List<?> selectBoard6FileList(Integer id) {
-    	return dao.selectBoard6FileList(id);
+    public List<?> selectBoardFileList(Integer id) {
+    	return dao.selectBoardFileList(id);
     }
     public FileVO getFileList(Integer id) {
     	return dao.getFileList(id);

@@ -128,7 +128,7 @@
                               margin-left: <c:out value=" ${20*li.reDepth}" />px; display: inline-block">
                     <c:out value="${li.reWriter}" />
                     <c:out value="${li.reRegDt}" />
-                    <a id="delete" href='commentDelete?id=${li.reNo}&bid=${board.brdNo}'>삭제</a>
+                    <a id="delete" href='commentDelete?id=${li.reNo}&bid=${board.brdNo}&reUser=${li.reWriter}'>삭제</a>
                     <a id="reply" href='/page/board/commentReply?id=${li.reNo}&bid=${board.brdNo}'>답글</a>
                     <br />
                     <c:out value="${li.reContent}" escapeXml="false"/>
