@@ -11,7 +11,7 @@
 
       <body>
 
-        <h1>검색결과</h1>
+        <h1>${title}</h1>
         <!-- public class Board {
           private int boardId; // [PK] BOARD_ID
           private String boardUser; // BOARD_USER
