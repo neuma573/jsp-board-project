@@ -71,6 +71,28 @@ public class BoardController {
 		return "redirect:/page/board";
 	}
 
+	/* 게시글 그룹 표시 */
+	@RequestMapping(value = "/selectOrigin")
+	public String selectOrigin(HttpSession session) {
+		if (session.getAttribute("selectOrigin") == "true") {
+			session.setAttribute("selectOrigin", "false");
+		} else {
+			session.setAttribute("selectOrigin", "true");
+		}
+		return "redirect:/page/board";
+	}
+
+	/* 답글 그룹 표시 */
+	@RequestMapping(value = "/selectRe")
+	public String selectRe(HttpSession session) {
+		if (session.getAttribute("selectRe") == "true") {
+			session.setAttribute("selectRe", "false");
+		} else {
+			session.setAttribute("selectRe", "true");
+		}
+		return "redirect:/page/board";
+	}
+
 	/* 게시판 리스트 출력 */
 	@GetMapping("")
 	public String boardList(PageVO pageVO, Model model, HttpSession session) throws Exception {
@@ -99,8 +121,6 @@ public class BoardController {
 		model.addAttribute("User", SpringUtils.getCurrentUserName());
 		model.addAttribute("select", String);
 		logger.info("pageVO 정보 :: " + pageVO);
-		session.setAttribute("rowCalculate", pageVO.getTotRow()-pageVO.getRowStart());
-		session.setAttribute("currPage", pageVO.getPage());
 		return "board/board.empty";
 	}
 
@@ -126,8 +146,8 @@ public class BoardController {
 
 	}
 
-	
 	private void viewCountUp(Integer id, HttpServletRequest request, HttpServletResponse response) {
+
 		Cookie oldCookie = null;
 		Cookie[] cookies = request.getCookies();
 		if (cookies != null) {
@@ -165,25 +185,21 @@ public class BoardController {
 			listview = svc.searchBoardListByTitle(searchKeyword);
 			logger.info("제목으로 검색, 키워드 ::" + searchKeyword);
 			model.addAttribute("list", listview);
-			model.addAttribute("title", "제목으로 검색 키워드:"+searchKeyword);
 			break;
 		case "content":
 			listview = svc.searchBoardListByContent(searchKeyword);
 			logger.info("내용으로 검색, 키워드 ::" + searchKeyword);
 			model.addAttribute("list", listview);
-			model.addAttribute("title", "본문내용으로 검색 키워드:"+searchKeyword);
 			break;
 		case "selectOrigin":
 			listview = svc.searchBoardListByOrigin();
 			logger.info("부모만 검색 ::");
 			model.addAttribute("list", listview);
-			model.addAttribute("title", "최상위 게시글만 선택");
 			break;
 		case "selectChild":
 			listview = svc.searchBoardListByChild();
 			logger.info("자식만 검색");
 			model.addAttribute("list", listview);
-			model.addAttribute("title", "자식 게시글만 선택");
 			break;
 
 		}
@@ -259,8 +275,9 @@ public class BoardController {
 		}
 		return "redirect:/page/board";
 	}
+	// 게시판 글 수정 등록
 
-	/* 파일업로드 */
+	// 파일업로드
 	public void uploadFile(FileVO fileVO, MultipartFile uploadFile, BoardVO board) throws IOException {
 		String originalFileExtension = uploadFile.getOriginalFilename()
 				.substring(uploadFile.getOriginalFilename().lastIndexOf("."));
@@ -268,7 +285,7 @@ public class BoardController {
 		String filePath = fileDownload;
 		file = new File(filePath + storedFileName);
 		DownloadUtils.upload(uploadFile, file);
-		
+		// 파일 저장완료
 		SecureRandom num = new SecureRandom();
 		fileVO.setFileRandomNo(num.nextLong());
 		fileVO.setFileBrdNo(board.getBrdNo());
@@ -278,7 +295,7 @@ public class BoardController {
 		svc.uploadFile(fileVO);
 	}
 
-	/* 다운로드 */
+	// 다운로드
 	@RequestMapping(value = "/fileDownload")
 	public void fileDownload(@RequestParam long fileRandomNo, @RequestParam Integer brdNo, HttpServletRequest request,
 			HttpServletResponse response) throws IOException {
@@ -300,7 +317,7 @@ public class BoardController {
 
 		file = new File(realPath);
 
-		/* 파일명 지정 */
+		// 파일명 지정
 		String outputFileName = new String(fileVO.getFileRealName().getBytes("KSC5601"), "8859_1");
 		response.setHeader("Content-Disposition", "attachment; filename=\"" + outputFileName + "\"");
 
@@ -324,7 +341,7 @@ public class BoardController {
 		}
 	}
 
-	/* 파일삭제 */
+	// 파일삭제
 	@RequestMapping(value = "fileDelete")
 	public String deleteFile(@RequestParam("id") String id, @RequestParam("bid") Integer bid, Model model)
 			throws IOException {
@@ -346,9 +363,11 @@ public class BoardController {
 		return "board/somePage.empty";
 	}
 
-	/* 게시판 글삭제 */
+	// 게시판 수정폼 호출
+
+	// 게시판 글삭제
 	@RequestMapping(value = "/boardDelete")
-	public String boardDelete(@RequestParam("id") Integer id, Model model, PageVO pageVO, HttpSession session) throws Exception {
+	public String boardDelete(@RequestParam("id") Integer id, Model model, PageVO pageVO) throws Exception {
 		if (!SpringUtils.getCurrentUserName().equals(board.getBrdWriter())) {
 			model.addAttribute("err", "[다른 사람의 글은 삭제할 수 없습니다]");
 			return "board/BoardFailure";
@@ -358,17 +377,15 @@ public class BoardController {
 		}
 		svc.deleteFileByParents(id);
 		svc.commentDeleteByParents(id);
-		Integer currPage = Integer.parseInt(session.getAttribute("currPage").toString());
-		Integer rowCalculate = Integer.parseInt(session.getAttribute("rowCalculate").toString());
-		if (rowCalculate==0) {
+		Integer currPage = pageVO.getPage();
+		if (pageVO.getTotRow() % 10 == 1) {
 			currPage--;
 		}
-		logger.info(currPage+" 페이지로 돌아갑니다");
-		logger.info("계산결과 "+rowCalculate);
+
 		return "redirect:/page/board?page=" + currPage;
 	}
 
-	/* 댓글저장 */
+	// 댓글저장
 	@RequestMapping(value = "/commentPost")
 	public String boardReplySave(ReplyVO boardReplyInfo) {
 		boardReplyInfo.setReWriter(SpringUtils.getCurrentUser().getUserId());
@@ -378,7 +395,7 @@ public class BoardController {
 		return "redirect:/page/board/boardView?id=" + boardReplyInfo.getReBrdNo();
 	}
 
-	/* 댓삭제 */
+	// 댓삭제
 	@RequestMapping(value = "/commentDelete")
 	public String boardReplyDelete(@RequestParam("id") String id, @RequestParam("bid") String bid,
 			@RequestParam("reUser") String reUser, ReplyVO boardReplyInfo, Model model) {
@@ -395,7 +412,7 @@ public class BoardController {
 		return "redirect:/page/board/boardView?id=" + bid;
 	}
 
-	/* 대댓입력창 호출 */
+//    대댓입력창 호출
 	@RequestMapping(value = "/commentReply")
 	public String commentReply(@RequestParam("id") int id, @RequestParam("bid") Integer bid, Model model)
 			throws Exception {

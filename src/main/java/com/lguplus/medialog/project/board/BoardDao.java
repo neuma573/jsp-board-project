@@ -3,13 +3,14 @@ package com.lguplus.medialog.project.board;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
-
+// 매퍼 클래스
 @Mapper
 public interface BoardDao {
+	public List<BoardVO> getList(Criteria criteria);
 	
 	public Integer selectBoardCount(PageVO pageVO);
 	
-	public List<BoardVO> searchBoardListByTitle(String keyword);
+	List<BoardVO> searchBoardListByTitle(String keyword);
 	
 	public List<BoardVO> searchBoardListByContent(String keyword);
 	
@@ -17,13 +18,14 @@ public interface BoardDao {
 	
 	public List<BoardVO> searchBoardListByChild();
 	
+	
     public List<?> selectBoardList(PageVO param);
     
     public List<?> selectBoardListByNew(PageVO param);
     
     public String boardSearchList();
 	
-    public void uploadBoard(BoardVO board);
+	void uploadBoard(BoardVO board);
 	
 	public BoardVO selectBoardParent(String brdParent);
 	
@@ -33,9 +35,10 @@ public interface BoardDao {
 	
 	public void updateBoardOrderDelete(Integer id);
 	
-		public void uploadFile(FileVO fileVO);
 	
-	public BoardVO getBoardDetail(Integer id);
+	void uploadFile(FileVO fileVO);
+	
+	BoardVO getBoardDetail(Integer id);
 	
 	public void boardModifyRegist(BoardVO board);
 	
@@ -43,9 +46,9 @@ public interface BoardDao {
 	
 	public int boardViewUpdate(Integer id);
 
-	public void commentPost(ReplyVO comment);
+	void commentPost(ReplyVO comment);
 	
-	public List<ReplyVO> openCommentList(Integer id);
+	List<ReplyVO> openCommentList(Integer id);
 	
 	public void addCommentCnt(String id);
 	

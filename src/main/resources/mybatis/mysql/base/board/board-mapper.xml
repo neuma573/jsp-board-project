@@ -100,7 +100,7 @@
 		SELECT * FROM
 			board 
 		WHERE 
-			BRD_DEPTH != '0' AND BRD_DEL_FLAG LIKE 'N'
+			BRD_DEPTH =! '0' AND BRD_DEL_FLAG LIKE 'N'
 		ORDER BY BRD_NO DESC
 	</select>    
     
